@@ -1,0 +1,55 @@
+# Configuration for The-Mind Repository Automation Scripts
+
+api_endpoints:
+  leetcode: "https://leetcode.com/graphql"
+  codeforces: "https://codeforces.com/api/"
+  steam: "https://api.steampowered.com"
+  chesscom: "https://api.chess.com/pub"
+
+paths:
+  # Directories (relative to project root)
+  shared: "Shared"
+  temp: "Temp"
+  scripts_dir: "scripts"
+
+  # Files (relative to project root)
+  commit_message_file: "commit_message.txt"
+
+  # Profile output files (filenames only, will be placed in 'shared' dir)
+  codeforces_output: "CodeforcesProfile.txt"
+  leetcode_output: "LeetcodeProfile.txt"
+  chesscom_output: "ChessCom.txt"
+  steam_output: "SteamStats.txt"
+  youtube_output: "YouTubeStats.txt"
+  pcspecs_output: "PCSpecs.txt"
+  
+  # Google credentials (filenames only, will be placed in 'scripts_dir')
+  token_file: "token.json"
+  creds_file: "credentials.json"
+
+cloud:
+  gdrive_books_path: "Books/PDFs"
+  google_scopes:
+    - "https://www.googleapis.com/auth/drive"
+    - "https://www.googleapis.com/auth/documents"
+    - "https://www.googleapis.com/auth/youtube.readonly"
+
+perplexity:
+  input_filename: "PerplexityQuery.txt"
+  output_filename: "PerplexityResult.txt"
+  model: "sonar"
+  system_prompt: "You are an AI assistant that provides detailed and well-researched answers."
+
+file_operations:
+  excluded_dirs:
+    - ".git"
+    - ".vscode"
+    - "scripts"
+    - "Shared"
+    - "__pycache__"
+  excluded_files:
+    - "README.md"
+    - "GEMINI.md"
+    - "CLAUDE.md"
+    - ".gitignore"
+    - ".env.example"

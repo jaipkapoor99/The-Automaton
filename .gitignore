@@ -1,0 +1,6 @@
+__pycache__/
+Temp/
+Shared/
+.env
+token.json
+credentials.json
