@@ -30,8 +30,15 @@ Workflow started at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 ============================================================" | Out-File -FilePath $LogFile -Append
 
 $ErrorActionPreference = "Stop"
-$CommitMessageFile = "Temp/commit_message.txt"
 $PythonScript = "scripts/main.py"
+
+function Get-ConfigValue {
+    param([string]$Key)
+    $Config = Get-Content "config.yaml" -Raw | ConvertFrom-Yaml
+    return $Config[$Key]
+}
+
+$CommitMessageFile = Join-Path -Path (Get-ConfigValue "paths")["temp"] -ChildPath (Get-ConfigValue "paths")["commit_message_file"]
 
 function Write-StepHeader {
     param([string]$Title, [int]$StepNumber = 0)
