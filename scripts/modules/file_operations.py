@@ -15,6 +15,24 @@ class FileManager:
         self.EXCLUDED_DIRS = EXCLUDED_DIRS
         self.EXCLUDED_FILES = EXCLUDED_FILES
 
+    def ensure_file_exists(self, file_path):
+        """
+        Ensures that a file exists at the given path. If the directory for the file
+        does not exist, it will be created. If the file does not exist, it will be
+        created as an empty file.
+        """
+        if not file_path:
+            return
+        try:
+            dir_name = os.path.dirname(file_path)
+            if not os.path.exists(dir_name):
+                os.makedirs(dir_name)
+            if not os.path.exists(file_path):
+                with open(file_path, 'w', encoding='utf-8'):
+                    pass  # Create an empty file
+        except Exception as e:
+            print(f"Error ensuring file exists at {file_path}: {e}")
+
     def clear_temp_directory(self):
         """Clears the content of all files in the Temp directory, preserving .gitignore."""
         print("Clearing Temp directory...")
@@ -40,21 +58,3 @@ class FileManager:
         except Exception as e:
             print(f"An error occurred while clearing the Temp directory: {e}")
             return False
-
-def ensure_file_exists(file_path):
-    """
-    Ensures that a file exists at the given path. If the directory for the file
-    does not exist, it will be created. If the file does not exist, it will be
-    created as an empty file.
-    """
-    if not file_path:
-        return
-    try:
-        dir_name = os.path.dirname(file_path)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-        if not os.path.exists(file_path):
-            with open(file_path, 'w', encoding='utf-8'):
-                pass  # Create an empty file
-    except Exception as e:
-        print(f"Error ensuring file exists at {file_path}: {e}")

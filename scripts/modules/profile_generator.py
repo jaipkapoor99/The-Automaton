@@ -18,7 +18,7 @@ from scripts.config import (
     CHESSCOM_ID, CHESSCOM_OUTPUT_FILE, CHESSCOM_API_ENDPOINT
 )
 from scripts.modules.google_auth import GoogleAuthenticator
-from scripts.modules.file_operations import ensure_file_exists
+from scripts.modules.file_operations import FileManager
 
 class CodeforcesGenerator:
     """Generates a Codeforces profile."""
@@ -89,7 +89,7 @@ class CodeforcesGenerator:
         if not self.handle:
             print("ERROR: Codeforces handle not set. Please set the CODEFORCES_ID in your .env file.")
             return False
-        ensure_file_exists(self.output_file)
+        FileManager().ensure_file_exists(self.output_file)
         print(f"Generating exhaustive Codeforces profile for {self.handle}...")
 
         self.profile_content.append(f"# Exhaustive Codeforces Profile: {self.handle}")
@@ -242,7 +242,7 @@ class LeetCodeGenerator:
         if not self.username:
             print("ERROR: LeetCode username not set.")
             return False
-        ensure_file_exists(self.output_file)
+        FileManager().ensure_file_exists(self.output_file)
         print(f"Generating exhaustive LeetCode profile for {self.username}...")
 
         query = """
@@ -359,7 +359,7 @@ class SteamStatsGenerator:
         if not self.api_key or not self.steam_id:
             print("ERROR: Steam API Key or Steam ID not set.")
             return False
-        ensure_file_exists(self.output_file)
+        FileManager().ensure_file_exists(self.output_file)
         print(f"Generating Steam profile for Steam ID: {self.steam_id}...")
 
         self.profile_content.append(f"# Steam Profile Analysis")
@@ -531,7 +531,7 @@ class YouTubeGenerator:
         if not self.channel_id:
             print("ERROR: YouTube Channel ID not set.")
             return False
-        ensure_file_exists(self.output_file)
+        FileManager().ensure_file_exists(self.output_file)
         print(f"Generating YouTube profile for channel {self.channel_id}...")
 
         channel_data = self._get_channel_stats()

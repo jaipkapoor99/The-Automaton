@@ -190,7 +190,6 @@ function Show-Help {
     "  markdown-lint                 Validate markdown files only" | Out-File -FilePath $LogFile -Append
     "  perplexity                    Run Perplexity query" | Out-File -FilePath $LogFile -Append
     "  steam-stats                   Fetch Steam gaming stats" | Out-File -FilePath $LogFile -Append
-    "  sync-books                    Sync local book PDFs to Google Drive" | Out-File -FilePath $LogFile -Append
     "  sync-cloud                    Sync all shared files to Google Docs" | Out-File -FilePath $LogFile -Append
     "  sync-gdoc-chesscom            Sync Chess.com profile to Google Docs" | Out-File -FilePath $LogFile -Append
     "  sync-gdoc-codeforces          Sync Codeforces profile to Google Docs" | Out-File -FilePath $LogFile -Append
@@ -256,10 +255,6 @@ try {
             Invoke-PythonFunction "steam-stats" "Fetching Steam gaming stats"
         }
 
-        "sync-books" {
-            Invoke-PythonFunction "sync-books" "Syncing local book PDFs to Google Drive"
-        }
-
         "sync-cloud" {
             Invoke-PythonFunction "sync-cloud" "Syncing with cloud storage"
         }
@@ -308,7 +303,6 @@ try {
             Write-StepHeader "Post-Push Steps" 3
             Invoke-PythonFunction "sync-local" "Syncing outputs to local cloud client"
             Invoke-PythonFunction "sync-cloud" "Syncing all shared files to Google Docs"
-            Invoke-PythonFunction "sync-books" "Syncing books to Google Drive"
         }
 
         "full" {
@@ -337,7 +331,6 @@ try {
             Write-StepHeader "Post-Push Steps" 3
             Invoke-PythonFunction "sync-local" "Syncing outputs to local cloud client"
             Invoke-PythonFunction "sync-cloud" "Syncing all shared files to Google Docs"
-            Invoke-PythonFunction "sync-books" "Syncing books to Google Drive"
         }
         
         default {

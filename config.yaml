@@ -5,6 +5,7 @@ api_endpoints:
   codeforces: "https://codeforces.com/api/"
   steam: "https://api.steampowered.com"
   chesscom: "https://api.chess.com/pub"
+  perplexity: "https://api.perplexity.ai/chat/completions"
 
 paths:
   # Directories (relative to project root)

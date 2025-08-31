@@ -65,8 +65,7 @@ YOUTUBE_OUTPUT_FILE = os.path.join(SHARED_DIR, cfg['paths']['youtube_output'])
 
 # --- Cloud Sync ---
 SCOPES = cfg['cloud']['google_scopes']
-TOKEN_FILE = os.path.join(ROOT_DIR, cfg['paths']['scripts_dir'], cfg['paths']['token_file'])
-CREDS_FILE = os.path.join(ROOT_DIR, cfg['paths']['scripts_dir'], cfg['paths']['creds_file'])
+TOKEN_FILE = os.path.join(ROOT_DIR, cfg['paths']['token_file'])
 GOOGLE_DOC_ID = os.environ.get("GOOGLE_DOC_ID")
 GOOGLE_DOC_CODEFORCES_ID = os.environ.get("GOOGLE_DOC_CODEFORCES_ID")
 GOOGLE_DOC_LEETCODE_ID = os.environ.get("GOOGLE_DOC_LEETCODE_ID")
@@ -88,11 +87,8 @@ GOOGLE_REDIRECT_URIS = os.environ.get("GOOGLE_REDIRECT_URIS")
 # --- GitHub ---
 CODING_DIR = os.path.dirname(ROOT_DIR)
 
-# --- Books ---
-LOCAL_BOOKS_DIR = os.path.join(LOCAL_SYNC_DIR, "Books", "PDFs")
-GDRIVE_BOOKS_PATH = cfg['cloud']['gdrive_books_path']
-
 # --- Perplexity ---
+PERPLEXITY_API_ENDPOINT = cfg['api_endpoints']['perplexity']
 PERPLEXITY_INPUT_FILE = os.path.join(TEMP_DIR, cfg['perplexity']['input_filename'])
 PERPLEXITY_OUTPUT_FILE = os.path.join(TEMP_DIR, cfg['perplexity']['output_filename'])
 PERPLEXITY_MODEL = cfg['perplexity']['model']

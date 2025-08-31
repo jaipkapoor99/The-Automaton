@@ -4,7 +4,7 @@ Handles Git operations for The-Mind repository.
 """
 import subprocess
 from scripts.config import ROOT_DIR, COMMIT_MESSAGE_FILE
-from scripts.modules.file_operations import ensure_file_exists
+from scripts.modules.file_operations import FileManager
 
 
 class GitManager:
@@ -15,7 +15,7 @@ class GitManager:
 
     def get_commit_message(self, file_path=COMMIT_MESSAGE_FILE):
         """Reads the commit message from the specified file."""
-        ensure_file_exists(file_path)
+        FileManager().ensure_file_exists(file_path)
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = [line.strip() for line in f if not line.strip().startswith('#') and line.strip()]
         

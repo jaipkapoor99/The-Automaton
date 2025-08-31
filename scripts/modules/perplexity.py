@@ -7,9 +7,9 @@ import os
 from dotenv import load_dotenv
 from scripts.config import (
     PERPLEXITY_INPUT_FILE, PERPLEXITY_OUTPUT_FILE,
-    PERPLEXITY_MODEL, PERPLEXITY_SYSTEM_PROMPT
+    PERPLEXITY_MODEL, PERPLEXITY_SYSTEM_PROMPT, PERPLEXITY_API_ENDPOINT
 )
-from scripts.modules.file_operations import ensure_file_exists
+from scripts.modules.file_operations import FileManager
 
 class Perplexity:
     """A class to handle Perplexity AI API interactions."""
@@ -17,17 +17,17 @@ class Perplexity:
     def __init__(self):
         load_dotenv()
         self.api_key = os.getenv('PERPLEXITY_API_KEY')
-        self.url = "https://api.perplexity.ai/chat/completions"
+        self.url = PERPLEXITY_API_ENDPOINT
 
     def _read_query(self):
         """Reads the query from the configured input file."""
-        ensure_file_exists(PERPLEXITY_INPUT_FILE)
+        FileManager().ensure_file_exists(PERPLEXITY_INPUT_FILE)
         with open(PERPLEXITY_INPUT_FILE, 'r', encoding='utf-8') as f:
             return f.read().strip()
 
     def _write_response(self, response_data):
         """Writes the response content and citations to the configured output file."""
-        ensure_file_exists(PERPLEXITY_OUTPUT_FILE)
+        FileManager().ensure_file_exists(PERPLEXITY_OUTPUT_FILE)
         
         content = "Error: Could not extract a valid response."
         if response_data and 'choices' in response_data and response_data['choices']:
