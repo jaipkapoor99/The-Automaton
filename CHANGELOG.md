@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-09-05
+
+### Added
+
+- **Bash Workflow**: Introduced `workflow.sh` as a bash alternative to the
+  PowerShell script for running workflows.
+
+### Changed
+
+- **Google OAuth Flow**: Refactored the Google Authentication process from an
+  automated local server to a manual, file-based flow. This allows for
+  authentication in environments without a local web server.
+- **Updated Documentation**: Updated `README.md` and `SETUP.md` to reflect
+  the new authentication process and the addition of the bash workflow.
+
 ## [1.0.0] - 2025-09-01
 
 ### Added

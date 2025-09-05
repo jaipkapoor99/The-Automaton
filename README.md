@@ -24,11 +24,11 @@ see the [Setup Guide](SETUP.md).
 
 ## Usage
 
-All workflows are run through the `workflow.ps1` script in the `scripts`
+All workflows are run through the `workflow.sh` script in the `scripts`
 directory. To see a list of all available actions, run:
 
-```powershell
-.\scripts\workflow.ps1 -Action help
+```bash
+./scripts/workflow.sh -Action help
 ```
 
 ## Contributing

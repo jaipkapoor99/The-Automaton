@@ -6,7 +6,8 @@ import os
 from scripts.config import (
     TOKEN_FILE, SCOPES,
     GOOGLE_PROJECT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
-    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URIS
+    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URIS,
+    GOOGLE_AUTH_URL_FILE, GOOGLE_AUTH_CODE_FILE
 )
 
 try:
@@ -58,7 +59,20 @@ class GoogleAuthenticator:
                 }
                 
                 flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
-                creds = flow.run_local_server(port=0)
+                flow.redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
+                auth_url, _ = flow.authorization_url(prompt='consent')
+                with open(GOOGLE_AUTH_URL_FILE, "w") as f:
+                    f.write(auth_url)
+
+                if not os.path.exists(GOOGLE_AUTH_CODE_FILE):
+                    print(f"Please open {GOOGLE_AUTH_URL_FILE}, authorize the app, and paste the code in {GOOGLE_AUTH_CODE_FILE}")
+                    return None
+
+                with open(GOOGLE_AUTH_CODE_FILE, "r") as f:
+                    code = f.read().strip()
+
+                flow.fetch_token(code=code)
+                creds = flow.credentials
             
             with open(TOKEN_FILE, "w") as token:
                 token.write(creds.to_json())

@@ -28,6 +28,10 @@ paths:
   token_file: "token.json"
   creds_file: "credentials.json"
 
+auth:
+  url_file: "auth_url.txt"
+  code_file: "auth_code.txt"
+
 cloud:
   gdrive_books_path: "Books/PDFs"
   google_scopes:
