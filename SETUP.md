@@ -84,22 +84,14 @@ To sync with Google services, you'll need to set up OAuth 2.0 credentials.
 ### 3. Authorizing the Application
 
 The first time you run a workflow that requires Google authentication (such as
-`sync-gdrive`), the application will perform the following steps:
+`sync-gdrive`), the application will automatically open a browser window.
+Follow the prompts in the browser to log in with your Google account and grant
+the necessary permissions.
 
-1. It will generate a unique authentication URL and save it to
-    `Temp/auth_url.txt`.
-2. You will be prompted to open this URL in your browser.
-3. After you log in and grant permission, Google will display an
-    authorization code.
-4. Copy this code.
-5. Create a new file named `Temp/auth_code.txt`.
-6. Paste the code into this file and save it.
-
-Once the `auth_code.txt` file is in place, you can run the workflow again.
-The application will use the code to generate a `token.json` file, which
-will be used for all subsequent authentications. You will not need to repeat
-this process unless you revoke the application's access or delete the
-`token.json` file.
+Upon successful authorization, the browser window will close automatically, and
+the application will generate a `token.json` file. This file will be used for
+all subsequent authentications. You will not need to repeat this process unless
+you revoke the application's access or delete the `token.json` file.
 
 ### 4. API Keys and User IDs
 
