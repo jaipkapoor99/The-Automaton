@@ -39,17 +39,21 @@ cloud:
     - "https://www.googleapis.com/auth/documents"
     - "https://www.googleapis.com/auth/youtube.readonly"
 
-perplexity:
-  input_filename: "PerplexityQuery.txt"
-  output_filename: "PerplexityResult.txt"
-  model: "sonar"
-  system_prompt: "You are an AI assistant that provides detailed and well-researched answers."
+
 
 file_operations:
   excluded_dirs:
     - ".git"
     - ".vscode"
     - "scripts"
+    - "Shared"
+    - "__pycache__"
+  excluded_files:
+    - "README.md"
+    - "GEMINI.md"
+    - "CLAUDE.md"
+    - ".gitignore"
+    - ".env.example"s"
     - "Shared"
     - "__pycache__"
   excluded_files:

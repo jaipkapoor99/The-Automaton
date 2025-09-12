@@ -89,12 +89,7 @@ GOOGLE_REDIRECT_URIS = os.environ.get("GOOGLE_REDIRECT_URIS")
 # --- GitHub ---
 CODING_DIR = os.path.dirname(ROOT_DIR)
 
-# --- Perplexity ---
-PERPLEXITY_API_ENDPOINT = cfg['api_endpoints']['perplexity']
-PERPLEXITY_INPUT_FILE = os.path.join(TEMP_DIR, cfg['perplexity']['input_filename'])
-PERPLEXITY_OUTPUT_FILE = os.path.join(TEMP_DIR, cfg['perplexity']['output_filename'])
-PERPLEXITY_MODEL = cfg['perplexity']['model']
-PERPLEXITY_SYSTEM_PROMPT = cfg['perplexity']['system_prompt']
+
 
 # --- File Operations ---
 EXCLUDED_DIRS = cfg['file_operations']['excluded_dirs']

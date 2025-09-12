@@ -207,14 +207,8 @@ class CodeforcesGenerator:
                         self.profile_content.append(f"  - **Memory:** {sub.get('memoryConsumedBytes', 0) / 1024:.2f} KB")
                     self.profile_content.append("") # Newline for spacing
 
-        try:
-            with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(self.profile_content))
-            print(f"Successfully generated exhaustive Codeforces profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return False
+        print(f"Successfully generated exhaustive Codeforces profile for {self.handle}")
+        return '\n'.join(self.profile_content)
 
 class LeetCodeGenerator:
     """Generates a LeetCode profile."""
@@ -241,8 +235,7 @@ class LeetCodeGenerator:
         """Fetches and generates the LeetCode profile."""
         if not self.username:
             print("ERROR: LeetCode username not set.")
-            return False
-        FileManager().ensure_file_exists(self.output_file)
+            return "" # Return empty string on error
         print(f"Generating exhaustive LeetCode profile for {self.username}...")
 
         query = """
@@ -424,14 +417,8 @@ class SteamStatsGenerator:
             self.profile_content.append("Could not retrieve game library. Profile may be private.")
 
         # 3. Finalize
-        try:
-            with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(self.profile_content))
-            print(f"Successfully generated Steam profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return False
+        print(f"Successfully generated Steam profile for Steam ID: {self.steam_id}")
+        return '\n'.join(self.profile_content)
 
 class YouTubeGenerator:
     """Generates a YouTube profile."""
@@ -593,14 +580,8 @@ class YouTubeGenerator:
                 title = snippet.get('title', 'N/A')
                 self.profile_content.append(f"- {title}")
 
-        try:
-            with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(self.profile_content))
-            print(f"Successfully generated YouTube profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return False
+        print(f"Successfully generated YouTube profile for channel {self.channel_id}")
+        return '\n'.join(self.profile_content)
 
 class ChessComGenerator:
     """Generates a Chess.com profile."""
@@ -720,10 +701,21 @@ class ChessComGenerator:
                 for game in blitz_games:
                     self.profile_content.append(self._format_game_entry(game))
 
-        try:
-            with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(self.profile_content))
-            print(f"Successfully generated Chess.com profile at {self.output_file}")
+        print(f"Successfully generated Chess.com profile for {self.username}")
+        return '\n'.join(self.profile_content)nt(f"Successfully generated Chess.com profile at {self.output_file}")
+            return True
+        except IOError as e:
+            print(f"Error writing to file {self.output_file}: {e}")
+            return Falsefully generated Chess.com profile at {self.output_file}")
+            return True
+        except IOError as e:
+            print(f"Error writing to file {self.output_file}: {e}")
+            return Falsefully generated Chess.com profile at {self.output_file}")
+            return True
+        except IOError as e:
+            print(f"Error writing to file {self.output_file}: {e}")
+            return Falseor writing to file {self.output_file}: {e}")
+            return Falsefully generated Chess.com profile at {self.output_file}")
             return True
         except IOError as e:
             print(f"Error writing to file {self.output_file}: {e}")

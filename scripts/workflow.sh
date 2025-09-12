@@ -197,7 +197,7 @@ ACTIONS:
   help                          Show this help
   leetcode                      Generate LeetCode profile
   markdown-lint                 Validate markdown files only
-  perplexity                    Run Perplexity query
+  
   steam-stats                   Fetch Steam gaming stats
   sync-cloud                    Sync all shared files to Google Docs
   sync-gdoc-chesscom            Sync Chess.com profile to Google Docs
@@ -234,70 +234,43 @@ echo "Action: $ACTION" >> "$LOG_FILE"
 # Main control flow based on the action
 case "$ACTION" in
     chess-com)
-        invoke_python_function "chess-com" "Generating Chess.com profile"
+        python3 -c "from scripts.modules.profile_generator import ChessComGenerator; print(ChessComGenerator().generate())" >> "$LOG_FILE" 2>&1
         ;;
     clear-temp)
-        invoke_python_function "clear-temp" "Clearing Temp directory"
+        python3 -c "from scripts.modules.file_operations import FileManager; FileManager().clear_temp_directory()" >> "$LOG_FILE" 2>&1
         ;;
     codeforces)
-        invoke_python_function "codeforces" "Generating Codeforces profile"
-        ;;
-    generate-and-sync-profiles)
-        invoke_python_function "generate-and-sync-profiles" "Generating and syncing all profiles"
+        python3 -c "from scripts.modules.profile_generator import CodeforcesGenerator; print(CodeforcesGenerator().generate())" >> "$LOG_FILE" 2>&1
         ;;
     git-commit)
-        invoke_python_function "git-commit" "Committing and pushing changes"
+        python3 -c "from scripts.modules.git_operations import GitManager; GitManager().commit_and_push()" >> "$LOG_FILE" 2>&1
         ;;
     leetcode)
-        invoke_python_function "leetcode" "Generating LeetCode profile"
+        python3 -c "from scripts.modules.profile_generator import LeetCodeGenerator; print(LeetCodeGenerator().generate())" >> "$LOG_FILE" 2>&1
         ;;
     markdown-lint)
-        invoke_python_function "markdown-lint" "Running markdown-lint validation"
+        python3 -c "from scripts.modules.validation import Validator; Validator().lint_markdown_files()" >> "$LOG_FILE" 2>&1
         ;;
-    perplexity)
-        invoke_python_function "perplexity" "Running Perplexity query"
-        ;;
+    
     steam-stats)
-        invoke_python_function "steam-stats" "Fetching Steam gaming stats"
-        ;;
-    sync-cloud)
-        invoke_python_function "sync-cloud" "Syncing with cloud storage"
-        ;;
-    sync-gdoc-chesscom)
-        invoke_python_function "sync-gdoc-chesscom" "Syncing Chess.com profile to Google Docs" "$DOC_ID"
-        ;;
-    sync-gdoc-codeforces)
-        invoke_python_function "sync-gdoc-codeforces" "Syncing Codeforces profile to Google Docs" "$DOC_ID"
-        ;;
-    sync-gdoc-leetcode)
-        invoke_python_function "sync-gdoc-leetcode" "Syncing LeetCode profile to Google Docs" "$DOC_ID"
-        ;;
-    sync-gdoc-steam)
-        invoke_python_function "sync-gdoc-steam" "Syncing Steam stats to Google Docs" "$DOC_ID"
-        ;;
-    sync-gdoc-youtube)
-        invoke_python_function "sync-gdoc-youtube" "Syncing YouTube stats to Google Docs" "$DOC_ID"
-        ;;
-    sync-local)
-        invoke_python_function "sync-local" "Syncing files to local cloud client"
+        python3 -c "from scripts.modules.profile_generator import SteamStatsGenerator; print(SteamStatsGenerator().generate())" >> "$LOG_FILE" 2>&1
         ;;
     youtube)
-        invoke_python_function "youtube" "Generating YouTube profile"
+        python3 -c "from scripts.modules.profile_generator import YouTubeGenerator; print(YouTubeGenerator().generate())" >> "$LOG_FILE" 2>&1
         ;;
     full-without-git)
         write_step_header "Pre-Commit Steps" 1
-        invoke_python_function "markdown-lint" "Linting Markdown files"
-        invoke_python_function "codeforces" "Generating Codeforces profile"
-        invoke_python_function "leetcode" "Generating LeetCode profile"
-        invoke_python_function "steam-stats" "Fetching Steam gaming stats"
-        invoke_python_function "youtube" "Generating YouTube profile"
-        invoke_python_function "chess-com" "Generating Chess.com profile"
+        
+        CF_CONTENT=$(python3 -c "from scripts.modules.profile_generator import CodeforcesGenerator; print(CodeforcesGenerator().generate())" 2>&1)
+        LC_CONTENT=$(python3 -c "from scripts.modules.profile_generator import LeetCodeGenerator; print(LeetCodeGenerator().generate())" 2>&1)
+        STEAM_CONTENT=$(python3 -c "from scripts.modules.profile_generator import SteamStatsGenerator; print(SteamStatsGenerator().generate())" 2>&1)
+        YT_CONTENT=$(python3 -c "from scripts.modules.profile_generator import YouTubeGenerator; print(YouTubeGenerator().generate())" 2>&1)
+        CHESS_CONTENT=$(python3 -c "from scripts.modules.profile_generator import ChessComGenerator; print(ChessComGenerator().generate())" 2>&1)
         
         echo "[INFO] Skipping Git operations as per action." >> "$LOG_FILE"
         
         write_step_header "Post-Push Steps" 3
-        invoke_python_function "sync-local" "Syncing outputs to local cloud client"
-        invoke_python_function "sync-cloud" "Syncing all shared files to Google Docs"
+        python3 -c "from scripts.modules.cloud_sync import CloudSyncer; CloudSyncer().sync_all_profiles_to_gdocs({'codeforces': '''$CF_CONTENT''', 'leetcode': '''$LC_CONTENT''', 'steam': '''$STEAM_CONTENT''', 'youtube': '''$YT_CONTENT''', 'chesscom': '''$CHESS_CONTENT'''})" >> "$LOG_FILE" 2>&1
         ;;
     full)
         MESSAGE=""
@@ -311,18 +284,17 @@ case "$ACTION" in
         echo "[INFO] Using commit message: $MESSAGE" >> "$LOG_FILE"
         
         write_step_header "Pre-Commit Steps" 1
-        invoke_python_function "markdown-lint" "Linting Markdown files"
-        invoke_python_function "codeforces" "Generating Codeforces profile"
-        invoke_python_function "leetcode" "Generating LeetCode profile"
-        invoke_python_function "steam-stats" "Fetching Steam gaming stats"
-        invoke_python_function "youtube" "Generating YouTube profile"
-        invoke_python_function "chess-com" "Generating Chess.com profile"
+        
+        CF_CONTENT=$(python3 -c "from scripts.modules.profile_generator import CodeforcesGenerator; print(CodeforcesGenerator().generate())" 2>&1)
+        LC_CONTENT=$(python3 -c "from scripts.modules.profile_generator import LeetCodeGenerator; print(LeetCodeGenerator().generate())" 2>&1)
+        STEAM_CONTENT=$(python3 -c "from scripts.modules.profile_generator import SteamStatsGenerator; print(SteamStatsGenerator().generate())" 2>&1)
+        YT_CONTENT=$(python3 -c "from scripts.modules.profile_generator import YouTubeGenerator; print(YouTubeGenerator().generate())" 2>&1)
+        CHESS_CONTENT=$(python3 -c "from scripts.modules.profile_generator import ChessComGenerator; print(ChessComGenerator().generate())" 2>&1)
         
         invoke_git_operations "$MESSAGE"
         
         write_step_header "Post-Push Steps" 3
-        invoke_python_function "sync-local" "Syncing outputs to local cloud client"
-        invoke_python_function "sync-cloud" "Syncing all shared files to Google Docs"
+        python3 -c "from scripts.modules.cloud_sync import CloudSyncer; CloudSyncer().sync_all_profiles_to_gdocs({'codeforces': '''$CF_CONTENT''', 'leetcode': '''$LC_CONTENT''', 'steam': '''$STEAM_CONTENT''', 'youtube': '''$YT_CONTENT''', 'chesscom': '''$CHESS_CONTENT'''})" >> "$LOG_FILE" 2>&1
         ;;
     *)
         # This will trigger the error trap

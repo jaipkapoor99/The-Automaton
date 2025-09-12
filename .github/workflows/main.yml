@@ -1,0 +1,66 @@
+name: The Automaton Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform (e.g., full, full-without-git)'
+        required: false
+        default: 'full-without-git'
+      commit_message:
+        description: 'Commit message for "full" action'
+        required: false
+
+jobs:
+  run-the-automaton:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x' # Use the appropriate Python version
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run The Automaton Workflow
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh ${{ github.event.inputs.action }} -CommitMessage "${{ github.event.inputs.commit_message }}"
+      env:
+        # --- API Keys & Identifiers (from .env.example) ---
+        # These should be added as GitHub Secrets in your repository settings.
+        # Go to Settings > Secrets and variables > Actions
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        
+        EMAIL_ID: ${{ secrets.EMAIL_ID }}
+        CODEFORCES_ID: ${{ secrets.CODEFORCES_ID }}
+        LEETCODE_ID: ${{ secrets.LEETCODE_ID }}
+        CHESSCOM_ID: ${{ secrets.CHESSCOM_ID }}
+        STEAM_ID: ${{ secrets.STEAM_ID }}
+        YOUTUBE_CHANNEL_ID: ${{ secrets.YOUTUBE_CHANNEL_ID }}
+        GITHUB_ID: ${{ secrets.GITHUB_ID }}
+        STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+        CODEFORCES_API_KEY: ${{ secrets.CODEFORCES_API_KEY }}
+        CODEFORCES_API_SECRET: ${{ secrets.CODEFORCES_API_SECRET }}
+
+        # --- Google Doc IDs ---
+        GOOGLE_DOC_LEETCODE_ID: ${{ secrets.GOOGLE_DOC_LEETCODE_ID }}
+        GOOGLE_DOC_CODEFORCES_ID: ${{ secrets.GOOGLE_DOC_CODEFORCES_ID }}
+        GOOGLE_DOC_STEAM_ID: ${{ secrets.GOOGLE_DOC_STEAM_ID }}
+        GOOGLE_DOC_YOUTUBE_ID: ${{ secrets.GOOGLE_DOC_YOUTUBE_ID }}
+        GOOGLE_DOC_CHESSCOM_ID: ${{ secrets.GOOGLE_DOC_CHESSCOM_ID }}
+
+        # --- Google OAuth Credentials ---
+        # These are used to generate the Google credentials.json in memory.
+        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
+        GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
+        GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_X509_CERT_URL }}
+        GOOGLE_REDIRECT_URIS: ${{ secrets.GOOGLE_REDIRECT_URIS }}
