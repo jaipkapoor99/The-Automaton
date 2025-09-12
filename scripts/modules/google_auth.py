@@ -7,7 +7,7 @@ from scripts.config import (
     TOKEN_FILE, SCOPES,
     GOOGLE_PROJECT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URIS,
-    GOOGLE_AUTH_URL_FILE
+    GOOGLE_AUTH_URL_FILE, GOOGLE_SERVICE_ACCOUNT_KEY_PATH
 )
 
 try:
@@ -15,6 +15,7 @@ try:
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
     from googleapiclient.discovery import build
+    from google.oauth2 import service_account
     GOOGLE_LIBS_AVAILABLE = True
 except ImportError:
     GOOGLE_LIBS_AVAILABLE = False
@@ -25,10 +26,22 @@ class GoogleAuthenticator:
     def __init__(self):
         if not GOOGLE_LIBS_AVAILABLE:
             raise ImportError("Google client libraries not installed.")
-        self.creds = self._authenticate()
+        self.creds = self._authenticate_service_account()
 
-    def _authenticate(self):
-        """Authenticates the user for Google APIs and returns credentials."""
+    def _authenticate_service_account(self):
+        """Authenticates using a service account and returns credentials."""
+        if GOOGLE_SERVICE_ACCOUNT_KEY_PATH and os.path.exists(GOOGLE_SERVICE_ACCOUNT_KEY_PATH):
+            try:
+                creds = service_account.Credentials.from_service_account_file(
+                    GOOGLE_SERVICE_ACCOUNT_KEY_PATH, scopes=SCOPES)
+                print("Authenticated using Service Account.")
+                return creds
+            except Exception as e:
+                print(f"Service Account authentication failed: {e}")
+        return None
+
+    def _authenticate_user_oauth(self):
+        """Authenticates using user-based OAuth 2.0 and returns credentials."""
         creds = None
         if os.path.exists(TOKEN_FILE):
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
@@ -42,10 +55,9 @@ class GoogleAuthenticator:
             
             if not creds:
                 if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID]):
-                    print("CRITICAL ERROR: Google OAuth environment variables (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID) are not set.")
+                    print("CRITICAL ERROR: Google OAuth environment variables (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID) are not set. Cannot perform user OAuth.")
                     return None
                 
-                # Construct the client_config dictionary from environment variables
                 client_config = {
                     "installed": {
                         "client_id": GOOGLE_CLIENT_ID,
@@ -72,13 +84,26 @@ class GoogleAuthenticator:
         return creds
 
     def get_service(self, service_name, version):
-        """Builds and returns an authorized API service object."""
+        """Builds and returns an authorized API service object using service account credentials."""
         if not self.creds:
-            print("Authentication failed. Cannot create service.")
+            print("Service account authentication failed. Cannot create service.")
             return None
         try:
             service = build(service_name, version, credentials=self.creds)
             return service
         except Exception as e:
-            print(f"Failed to create service {service_name} v{version}: {e}")
+            print(f"Failed to create service {service_name} v{version} with service account: {e}")
+            return None
+
+    def get_user_service(self, service_name, version):
+        """Builds and returns an authorized API service object using user-based OAuth credentials."""
+        user_creds = self._authenticate_user_oauth()
+        if not user_creds:
+            print("User OAuth authentication failed. Cannot create service.")
+            return None
+        try:
+            service = build(service_name, version, credentials=user_creds)
+            return service
+        except Exception as e:
+            print(f"Failed to create service {service_name} v{version} with user OAuth: {e}")
             return None

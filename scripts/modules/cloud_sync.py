@@ -3,6 +3,7 @@
 Handles cloud synchronization tasks for The-Automaton repository, including syncing
 to local directories and Google Drive.
 """
+import time
 from scripts.config import (
     GOOGLE_DOC_CODEFORCES_ID, GOOGLE_DOC_LEETCODE_ID, GOOGLE_DOC_STEAM_ID,
     GOOGLE_DOC_YOUTUBE_ID, GOOGLE_DOC_CHESSCOM_ID,
@@ -23,10 +24,11 @@ class CloudSyncer:
             self.authenticator = None
 
 
-    def _sync_any_content_to_gdoc(self, content_string, doc_id, doc_id_source_name="provided"):
+    def _sync_any_content_to_gdoc(self, content_string, doc_id, doc_id_source_name="provided", max_retries=5, initial_delay=1):
         """
         Generic function to sync a string content to a specific Google Doc.
         This function will completely overwrite the document's content.
+        Includes retry logic with exponential backoff.
         """
         if not self.authenticator:
             print("ERROR: Google Authenticator not available.")
@@ -35,57 +37,58 @@ class CloudSyncer:
             print(f"CRITICAL ERROR: Google Doc ID from {doc_id_source_name} not found. Skipping sync.")
             return False
 
-        try:
-            docs_service = self.authenticator.get_service("docs", "v1")
-            if not docs_service:
-                return False
-            
-            file_content = content_string
+        for attempt in range(max_retries):
+            try:
+                docs_service = self.authenticator.get_service("docs", "v1")
+                if not docs_service:
+                    return False
+                
+                file_content = content_string
 
-            if not file_content:
-                print(f"WARNING: Source content is empty. Clearing Google Doc.")
-            
-            document = docs_service.documents().get(documentId=doc_id, fields="body(content)").execute()
-            content = document.get('body', {}).get('content', [])
-            
-            requests = []
-            # To clear the document, we delete content from the beginning (index 1)
-            # to the end of the document's body. The end index is retrieved from the
-            # last structural element. We subtract 1 because the final newline
-            # character of a document cannot be deleted, and an API error would occur.
-            if content:
-                end_of_doc_index = content[-1].get('endIndex', 0)
-                if end_of_doc_index > 2:  # An empty doc has an endIndex of 2. Only delete if there's content.
-                    requests.append({
-                        "deleteContentRange": {
-                            "range": {
-                                "startIndex": 1,
-                                "endIndex": end_of_doc_index - 1
+                if not file_content:
+                    print(f"WARNING: Source content is empty. Clearing Google Doc.")
+                
+                document = docs_service.documents().get(documentId=doc_id, fields="body(content)").execute()
+                content = document.get('body', {}).get('content', [])
+                
+                requests = []
+                if content:
+                    end_of_doc_index = content[-1].get('endIndex', 0)
+                    if end_of_doc_index > 2:
+                        requests.append({
+                            "deleteContentRange": {
+                                "range": {
+                                    "startIndex": 1,
+                                    "endIndex": end_of_doc_index - 1
+                                }
                             }
+                        })
+
+                if file_content:
+                    requests.append({
+                        "insertText": {
+                            "location": {"index": 1},
+                            "text": file_content
                         }
                     })
 
-            # If there is new content from the source file, add an insert request.
-            if file_content:
-                requests.append({
-                    "insertText": {
-                        "location": {"index": 1},
-                        "text": file_content
-                    }
-                })
-
-            # If there are any requests (either to delete or insert), execute them.
-            if requests:
-                docs_service.documents().batchUpdate(documentId=doc_id, body={"requests": requests}).execute()
-            
-            print(f"Successfully synced content to Google Doc.")
-            return True
-        except HttpError as err:
-            print(f"A Google API error occurred: {err}")
-            return False
-        except Exception as e:
-            print(f"An unexpected error occurred during Google Doc sync: {e}")
-            return False
+                if requests:
+                    docs_service.documents().batchUpdate(documentId=doc_id, body={"requests": requests}).execute()
+                
+                print(f"Successfully synced content to Google Doc.")
+                return True
+            except HttpError as err:
+                if err.resp.status in [403, 429, 500, 503] and attempt < max_retries - 1:
+                    delay = initial_delay * (2 ** attempt)
+                    print(f"Google API error (status {err.resp.status}). Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                else:
+                    print(f"A Google API error occurred after {attempt + 1} attempts: {err}")
+                    return False
+            except Exception as e:
+                print(f"An unexpected error occurred during Google Doc sync after {attempt + 1} attempts: {e}")
+                return False
+        return False # All retries failed
 
     def sync_codeforces_to_gdoc(self, content):
         """Syncs the Codeforces profile to its Google Doc."""

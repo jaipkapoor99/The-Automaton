@@ -18,6 +18,7 @@ from scripts.config import (
     CHESSCOM_ID, CHESSCOM_API_ENDPOINT
 )
 from scripts.modules.google_auth import GoogleAuthenticator
+from googleapiclient.errors import HttpError
 
 
 class CodeforcesGenerator:
@@ -420,12 +421,19 @@ class YouTubeGenerator:
     def _get_channel_stats(self):
         if not self.youtube_service:
             return None
-        request = self.youtube_service.channels().list(
-            part="snippet,contentDetails,statistics",
-            mine=True
-        )
-        response = request.execute()
-        return response.get('items', [{}])[0]
+        try:
+            request = self.youtube_service.channels().list(
+                part="snippet,contentDetails,statistics",
+                id=self.channel_id
+            )
+            response = request.execute()
+            return response.get('items', [{}])[0]
+        except HttpError as err:
+            print(f"YouTube API HttpError: {err.resp.status} - {err.content}")
+            return None
+        except Exception as e:
+            print(f"Error fetching YouTube channel stats: {e}")
+            return None
 
     def _get_playlists(self):
         if not self.youtube_service:
