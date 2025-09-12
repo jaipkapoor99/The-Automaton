@@ -11,21 +11,18 @@ jobs:
   authenticate-service-account:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Authenticate to Google (once)
+      id: auth
+      uses: google-github-actions/auth@v2
       with:
-        python-version: '3.x'
+        credentials_json: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+        create_credentials_file: true
 
-    - name: Install dependencies
-      run: pip install -r scripts/requirements.txt
-
-    - name: Set up Google Service Account Key
-      run: |
-        mkdir -p Temp
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" > Temp/service_account_key.json
+    - name: Upload service account credentials artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: gcp-credentials
+        path: ${{ steps.auth.outputs.credentials_file_path }}
 
   generate-and-sync-codeforces:
     runs-on: ubuntu-latest
@@ -42,10 +39,16 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Set up Google Service Account Key
+    - name: Download service account credentials
+      uses: actions/download-artifact@v4
+      with:
+        name: gcp-credentials
+        path: gcp-creds
+
+    - name: Prepare service account file for scripts
       run: |
         mkdir -p Temp
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" > Temp/service_account_key.json
+        cp gcp-creds/*.json Temp/service_account_key.json
 
     - name: Run Codeforces Workflow
       run: |
@@ -78,10 +81,16 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Set up Google Service Account Key
+    - name: Download service account credentials
+      uses: actions/download-artifact@v4
+      with:
+        name: gcp-credentials
+        path: gcp-creds
+
+    - name: Prepare service account file for scripts
       run: |
         mkdir -p Temp
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" > Temp/service_account_key.json
+        cp gcp-creds/*.json Temp/service_account_key.json
 
     - name: Run LeetCode Workflow
       run: |
@@ -114,10 +123,16 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Set up Google Service Account Key
+    - name: Download service account credentials
+      uses: actions/download-artifact@v4
+      with:
+        name: gcp-credentials
+        path: gcp-creds
+
+    - name: Prepare service account file for scripts
       run: |
         mkdir -p Temp
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" > Temp/service_account_key.json
+        cp gcp-creds/*.json Temp/service_account_key.json
 
     - name: Run Steam Workflow
       run: |
@@ -151,10 +166,16 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Set up Google Service Account Key
+    - name: Download service account credentials
+      uses: actions/download-artifact@v4
+      with:
+        name: gcp-credentials
+        path: gcp-creds
+
+    - name: Prepare service account file for scripts
       run: |
         mkdir -p Temp
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" > Temp/service_account_key.json
+        cp gcp-creds/*.json Temp/service_account_key.json
 
     - name: Run YouTube Workflow
       run: |
@@ -187,10 +208,16 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Set up Google Service Account Key
+    - name: Download service account credentials
+      uses: actions/download-artifact@v4
+      with:
+        name: gcp-credentials
+        path: gcp-creds
+
+    - name: Prepare service account file for scripts
       run: |
         mkdir -p Temp
-        echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}" > Temp/service_account_key.json
+        cp gcp-creds/*.json Temp/service_account_key.json
 
     - name: Run Chess.com Workflow
       run: |
