@@ -4,11 +4,12 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: '0 18,6 * * *'
 
 jobs:
-  run-the-automaton:
+  setup:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -16,45 +17,128 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x' # Use the appropriate Python version
+        python-version: '3.x'
 
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Run The Automaton Workflow
+  generate-and-sync-codeforces:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run Codeforces Workflow
       run: |
         chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh ${{ github.event.inputs.action }} -CommitMessage "${{ github.event.inputs.commit_message }}"
+        ./scripts/workflow.sh codeforces
       env:
-        # --- API Keys & Identifiers (from .env.example) ---
-        # These should be added as GitHub Secrets in your repository settings.
-        # Go to Settings > Secrets and variables > Actions
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        
         EMAIL_ID: ${{ secrets.EMAIL_ID }}
         CODEFORCES_ID: ${{ secrets.CODEFORCES_ID }}
-        LEETCODE_ID: ${{ secrets.LEETCODE_ID }}
-        CHESSCOM_ID: ${{ secrets.CHESSCOM_ID }}
-        STEAM_ID: ${{ secrets.STEAM_ID }}
-        YOUTUBE_CHANNEL_ID: ${{ secrets.YOUTUBE_CHANNEL_ID }}
-        GITHUB_ID: ${{ secrets.GITHUB_ID }}
-        STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
-        CODEFORCES_API_KEY: ${{ secrets.CODEFORCES_API_KEY }}
-        CODEFORCES_API_SECRET: ${{ secrets.CODEFORCES_API_SECRET }}
-
-        # --- Google Doc IDs ---
-        GOOGLE_DOC_LEETCODE_ID: ${{ secrets.GOOGLE_DOC_LEETCODE_ID }}
         GOOGLE_DOC_CODEFORCES_ID: ${{ secrets.GOOGLE_DOC_CODEFORCES_ID }}
-        GOOGLE_DOC_STEAM_ID: ${{ secrets.GOOGLE_DOC_STEAM_ID }}
-        GOOGLE_DOC_YOUTUBE_ID: ${{ secrets.GOOGLE_DOC_YOUTUBE_ID }}
-        GOOGLE_DOC_CHESSCOM_ID: ${{ secrets.GOOGLE_DOC_CHESSCOM_ID }}
 
-        # --- Google OAuth Credentials ---
-        # These are used to generate the Google credentials.json in memory.
-        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
-        GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
-        GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_X509_CERT_URL }}
-        GOOGLE_REDIRECT_URIS: ${{ secrets.GOOGLE_REDIRECT_URIS }}
+  generate-and-sync-leetcode:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run LeetCode Workflow
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh leetcode
+      env:
+        EMAIL_ID: ${{ secrets.EMAIL_ID }}
+        LEETCODE_ID: ${{ secrets.LEETCODE_ID }}
+        GOOGLE_DOC_LEETCODE_ID: ${{ secrets.GOOGLE_DOC_LEETCODE_ID }}
+
+  generate-and-sync-steam:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run Steam Workflow
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh steam-stats
+      env:
+        EMAIL_ID: ${{ secrets.EMAIL_ID }}
+        STEAM_ID: ${{ secrets.STEAM_ID }}
+        STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+        GOOGLE_DOC_STEAM_ID: ${{ secrets.GOOGLE_DOC_STEAM_ID }}
+
+  generate-and-sync-youtube:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run YouTube Workflow
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh youtube
+      env:
+        EMAIL_ID: ${{ secrets.EMAIL_ID }}
+        YOUTUBE_CHANNEL_ID: ${{ secrets.YOUTUBE_CHANNEL_ID }}
+        GOOGLE_DOC_YOUTUBE_ID: ${{ secrets.GOOGLE_DOC_YOUTUBE_ID }}
+
+  generate-and-sync-chesscom:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run Chess.com Workflow
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh chess-com
+      env:
+        EMAIL_ID: ${{ secrets.EMAIL_ID }}
+        CHESSCOM_ID: ${{ secrets.CHESSCOM_ID }}
+        GOOGLE_DOC_CHESSCOM_ID: ${{ secrets.GOOGLE_DOC_CHESSCOM_ID }}

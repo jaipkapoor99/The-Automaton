@@ -87,30 +87,30 @@ class CloudSyncer:
             print(f"An unexpected error occurred during Google Doc sync: {e}")
             return False
 
-    def sync_codeforces_to_gdoc(self):
+    def sync_codeforces_to_gdoc(self, content):
         """Syncs the Codeforces profile to its Google Doc."""
         print_section_header("Sync Codeforces Profile to Google Doc")
-        return self._sync_any_file_to_gdoc(CF_OUTPUT_FILE, GOOGLE_DOC_CODEFORCES_ID, "GOOGLE_DOC_CODEFORCES_ID")
+        return self._sync_any_content_to_gdoc(content, GOOGLE_DOC_CODEFORCES_ID, "GOOGLE_DOC_CODEFORCES_ID")
 
-    def sync_leetcode_to_gdoc(self):
+    def sync_leetcode_to_gdoc(self, content):
         """Syncs the LeetCode profile to its Google Doc."""
         print_section_header("Sync LeetCode Profile to Google Doc")
-        return self._sync_any_file_to_gdoc(LEETCODE_OUTPUT_FILE, GOOGLE_DOC_LEETCODE_ID, "GOOGLE_DOC_LEETCODE_ID")
+        return self._sync_any_content_to_gdoc(content, GOOGLE_DOC_LEETCODE_ID, "GOOGLE_DOC_LEETCODE_ID")
 
-    def sync_steam_to_gdoc(self):
+    def sync_steam_to_gdoc(self, content):
         """Syncs the Steam stats to its Google Doc."""
         print_section_header("Sync Steam Stats to Google Doc")
-        return self._sync_any_file_to_gdoc(STEAM_OUTPUT_FILE, GOOGLE_DOC_STEAM_ID, "GOOGLE_DOC_STEAM_ID")
+        return self._sync_any_content_to_gdoc(content, GOOGLE_DOC_STEAM_ID, "GOOGLE_DOC_STEAM_ID")
 
-    def sync_youtube_to_gdoc(self):
+    def sync_youtube_to_gdoc(self, content):
         """Syncs the YouTube stats to its Google Doc."""
         print_section_header("Sync YouTube Stats to Google Doc")
-        return self._sync_any_file_to_gdoc(YOUTUBE_OUTPUT_FILE, GOOGLE_DOC_YOUTUBE_ID, "GOOGLE_DOC_YOUTUBE_ID")
+        return self._sync_any_content_to_gdoc(content, GOOGLE_DOC_YOUTUBE_ID, "GOOGLE_DOC_YOUTUBE_ID")
 
-    def sync_chesscom_to_gdoc(self):
+    def sync_chesscom_to_gdoc(self, content):
         """Syncs the Chess.com profile to its Google Doc."""
         print_section_header("Sync Chess.com Profile to Google Doc")
-        return self._sync_any_file_to_gdoc(CHESSCOM_OUTPUT_FILE, GOOGLE_DOC_CHESSCOM_ID, "GOOGLE_DOC_CHESSCOM_ID")
+        return self._sync_any_content_to_gdoc(content, GOOGLE_DOC_CHESSCOM_ID, "GOOGLE_DOC_CHESSCOM_ID")
 
     def sync_all_profiles_to_gdocs(self, profiles_content):
         """Syncs all supported shared files to their respective Google Docs."""
@@ -139,3 +139,22 @@ class CloudSyncer:
                 print(f"An unexpected error occurred during sync for {profile_type}: {e}")
         
         return all_successful
+
+    def sync_all_profiles_to_gdocs_from_files(self, codeforces_file, leetcode_file, steam_file, youtube_file, chesscom_file):
+        """
+        Reads content from files and then syncs all supported profiles to their respective Google Docs.
+        """
+        profiles_content = {}
+        
+        with open(codeforces_file, 'r', encoding='utf-8') as f:
+            profiles_content['codeforces'] = f.read()
+        with open(leetcode_file, 'r', encoding='utf-8') as f:
+            profiles_content['leetcode'] = f.read()
+        with open(steam_file, 'r', encoding='utf-8') as f:
+            profiles_content['steam'] = f.read()
+        with open(youtube_file, 'r', encoding='utf-8') as f:
+            profiles_content['youtube'] = f.read()
+        with open(chesscom_file, 'r', encoding='utf-8') as f:
+            profiles_content['chesscom'] = f.read()
+            
+        return self.sync_all_profiles_to_gdocs(profiles_content)

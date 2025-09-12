@@ -8,12 +8,11 @@ import os
 # Ensure the script can find the modules directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.config import print_section_header
 from scripts.modules.validation import Validator
 from scripts.modules.profile_generator import CodeforcesGenerator, LeetCodeGenerator, SteamStatsGenerator, YouTubeGenerator, ChessComGenerator
 from scripts.modules.cloud_sync import CloudSyncer
-from scripts.modules.perplexity import Perplexity
-from scripts.modules.git_operations import GitManager
+from scripts.config import GOOGLE_DOC_CODEFORCES_ID, GOOGLE_DOC_LEETCODE_ID, GOOGLE_DOC_STEAM_ID, GOOGLE_DOC_YOUTUBE_ID, GOOGLE_DOC_CHESSCOM_ID
+
 
 def main():
     """Main function that handles command line arguments and workflow execution."""
@@ -24,38 +23,20 @@ def main():
     workflow = sys.argv[1]
     success = False
 
+    cloud_syncer = CloudSyncer()
+
+    def _generate_and_sync(generator_class, sync_method, doc_id):
+        profile_content = generator_class().generate()
+        if profile_content:
+            return sync_method(profile_content)
+        return False
+
     workflows = {
-        'chess-com': ChessComGenerator().generate,
-        
-        'clear-temp': FileManager().clear_temp_directory,
-        'codeforces': CodeforcesGenerator().generate,
-        
-        
-        'git-commit': GitManager().commit_and_push,
-        'generate-and-sync-profiles': lambda: (
-            lambda cf_content, lc_content, steam_content, yt_content, chess_content:
-                CloudSyncer().sync_all_profiles_to_gdocs({
-                    "codeforces": cf_content,
-                    "leetcode": lc_content,
-                    "steam": steam_content,
-                    "youtube": yt_content,
-                    "chesscom": chess_content
-                })
-        )(
-            CodeforcesGenerator().generate(),
-            LeetCodeGenerator().generate(),
-            SteamStatsGenerator().generate(),
-            YouTubeGenerator().generate(),
-            ChessComGenerator().generate()
-        ),
-        'leetcode': LeetCodeGenerator().generate,
-        'markdown-lint': Validator().lint_markdown_files,
-        
-        'steam-stats': SteamStatsGenerator().generate,
-        'sync-cloud': CloudSyncer().sync_all_profiles_to_gdocs,
-        'sync-local': CloudSyncer()._sync_shared_dir_to_local,
-        
-        'youtube': YouTubeGenerator().generate,
+        'chess-com': lambda: _generate_and_sync(ChessComGenerator, cloud_syncer.sync_chesscom_to_gdoc, GOOGLE_DOC_CHESSCOM_ID),
+        'codeforces': lambda: _generate_and_sync(CodeforcesGenerator, cloud_syncer.sync_codeforces_to_gdoc, GOOGLE_DOC_CODEFORCES_ID),
+        'leetcode': lambda: _generate_and_sync(LeetCodeGenerator, cloud_syncer.sync_leetcode_to_gdoc, GOOGLE_DOC_LEETCODE_ID),
+        'steam-stats': lambda: _generate_and_sync(SteamStatsGenerator, cloud_syncer.sync_steam_to_gdoc, GOOGLE_DOC_STEAM_ID),
+        'youtube': lambda: _generate_and_sync(YouTubeGenerator, cloud_syncer.sync_youtube_to_gdoc, GOOGLE_DOC_YOUTUBE_ID),
     }
 
     if workflow in workflows:

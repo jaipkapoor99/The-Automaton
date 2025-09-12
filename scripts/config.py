@@ -31,37 +31,28 @@ GITHUB_ID = os.environ.get("GITHUB_ID")
 
 # --- General Paths (constructed from YAML) ---
 TEMP_DIR = os.path.join(ROOT_DIR, cfg['paths']['temp'])
-SHARED_DIR = os.path.join(ROOT_DIR, cfg['paths']['shared'])
-
-# --- Local Sync Path Configuration ---
-# Use the user-defined path from the environment if it exists, otherwise default to the user's Documents folder.
-LOCAL_SYNC_DIR = os.environ.get('LOCAL_SYNC_DIR')
-if not LOCAL_SYNC_DIR or not os.path.isdir(LOCAL_SYNC_DIR):
-    LOCAL_SYNC_DIR = os.path.join(os.path.expanduser('~'), 'Documents')
-
-COMMIT_MESSAGE_FILE = os.path.join(TEMP_DIR, cfg['paths']['commit_message_file'])
 
 # --- Codeforces ---
 CF_API_KEY = os.environ.get("CODEFORCES_API_KEY")
 CF_API_SECRET = os.environ.get("CODEFORCES_API_SECRET")
-CF_OUTPUT_FILE = os.path.join(SHARED_DIR, cfg['paths']['codeforces_output'])
+
 
 # --- LeetCode ---
-LEETCODE_OUTPUT_FILE = os.path.join(SHARED_DIR, cfg['paths']['leetcode_output'])
+
 LEETCODE_API_ENDPOINT = cfg['api_endpoints']['leetcode']
 CODEFORCES_API_ENDPOINT = cfg['api_endpoints']['codeforces']
 
 # --- Chess.com ---
 CHESSCOM_API_ENDPOINT = cfg['api_endpoints']['chesscom']
-CHESSCOM_OUTPUT_FILE = os.path.join(SHARED_DIR, cfg['paths']['chesscom_output'])
+
 
 # --- Steam ---
 STEAM_API_KEY = os.environ.get("STEAM_API_KEY")
 STEAM_API_ENDPOINT = cfg['api_endpoints']['steam']
-STEAM_OUTPUT_FILE = os.path.join(SHARED_DIR, cfg['paths']['steam_output'])
+
 
 # --- YouTube ---
-YOUTUBE_OUTPUT_FILE = os.path.join(SHARED_DIR, cfg['paths']['youtube_output'])
+
 
 # --- Cloud Sync ---
 SCOPES = cfg['cloud']['google_scopes']
@@ -92,8 +83,7 @@ CODING_DIR = os.path.dirname(ROOT_DIR)
 
 
 # --- File Operations ---
-EXCLUDED_DIRS = cfg['file_operations']['excluded_dirs']
-EXCLUDED_FILES = cfg['file_operations']['excluded_files']
+
 
 def print_section_header(title):
     """Prints a formatted section header."""

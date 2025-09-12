@@ -12,20 +12,19 @@ import random
 import string
 from typing import Dict, Any
 from scripts.config import (
-    CF_HANDLE, CF_OUTPUT_FILE, LEETCODE_USERNAME, LEETCODE_OUTPUT_FILE,
-    LEETCODE_API_ENDPOINT, STEAM_ID, STEAM_API_KEY, STEAM_API_ENDPOINT, STEAM_OUTPUT_FILE, YOUTUBE_CHANNEL_ID,
-    YOUTUBE_OUTPUT_FILE, CF_API_KEY, CF_API_SECRET, CODEFORCES_API_ENDPOINT,
-    CHESSCOM_ID, CHESSCOM_OUTPUT_FILE, CHESSCOM_API_ENDPOINT
+    CF_HANDLE, LEETCODE_USERNAME,
+    LEETCODE_API_ENDPOINT, STEAM_ID, STEAM_API_KEY, STEAM_API_ENDPOINT, YOUTUBE_CHANNEL_ID,
+    CF_API_KEY, CF_API_SECRET, CODEFORCES_API_ENDPOINT,
+    CHESSCOM_ID, CHESSCOM_API_ENDPOINT
 )
 from scripts.modules.google_auth import GoogleAuthenticator
-from scripts.modules.file_operations import FileManager
+
 
 class CodeforcesGenerator:
     """Generates a Codeforces profile."""
 
-    def __init__(self, handle=CF_HANDLE, output_file=CF_OUTPUT_FILE, api_key=CF_API_KEY, api_secret=CF_API_SECRET):
+    def __init__(self, handle=CF_HANDLE, api_key=CF_API_KEY, api_secret=CF_API_SECRET):
         self.handle = handle
-        self.output_file = output_file
         self.api_key = api_key
         self.api_secret = api_secret
         self.profile_content = []
@@ -89,7 +88,6 @@ class CodeforcesGenerator:
         if not self.handle:
             print("ERROR: Codeforces handle not set. Please set the CODEFORCES_ID in your .env file.")
             return False
-        FileManager().ensure_file_exists(self.output_file)
         print(f"Generating exhaustive Codeforces profile for {self.handle}...")
 
         self.profile_content.append(f"# Exhaustive Codeforces Profile: {self.handle}")
@@ -213,9 +211,8 @@ class CodeforcesGenerator:
 class LeetCodeGenerator:
     """Generates a LeetCode profile."""
 
-    def __init__(self, username=LEETCODE_USERNAME, output_file=LEETCODE_OUTPUT_FILE):
+    def __init__(self, username=LEETCODE_USERNAME):
         self.username = username
-        self.output_file = output_file
         self.profile_content = []
 
     def _fetch_graphql_data(self, query, variables):
@@ -285,22 +282,15 @@ class LeetCodeGenerator:
             except (json.JSONDecodeError, TypeError):
                 self.profile_content.append("- Calendar data not available.")
 
-        try:
-            with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(self.profile_content))
-            print(f"Successfully generated exhaustive LeetCode profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return False
+        print(f"Successfully generated exhaustive LeetCode profile for {self.username}")
+        return '\n'.join(self.profile_content)
 
 class SteamStatsGenerator:
     """Generates a comprehensive Steam profile based on a detailed plan."""
 
-    def __init__(self, api_key=STEAM_API_KEY, steam_id=STEAM_ID, output_file=STEAM_OUTPUT_FILE):
+    def __init__(self, api_key=STEAM_API_KEY, steam_id=STEAM_ID):
         self.api_key = api_key
         self.steam_id = steam_id
-        self.output_file = output_file
         self.profile_content = []
         self.base_url = STEAM_API_ENDPOINT
 
@@ -352,7 +342,6 @@ class SteamStatsGenerator:
         if not self.api_key or not self.steam_id:
             print("ERROR: Steam API Key or Steam ID not set.")
             return False
-        FileManager().ensure_file_exists(self.output_file)
         print(f"Generating Steam profile for Steam ID: {self.steam_id}...")
 
         self.profile_content.append(f"# Steam Profile Analysis")
@@ -423,9 +412,8 @@ class SteamStatsGenerator:
 class YouTubeGenerator:
     """Generates a YouTube profile."""
 
-    def __init__(self, channel_id=YOUTUBE_CHANNEL_ID, output_file=YOUTUBE_OUTPUT_FILE):
+    def __init__(self, channel_id=YOUTUBE_CHANNEL_ID):
         self.channel_id = channel_id
-        self.output_file = output_file
         self.profile_content = []
         self.youtube_service = GoogleAuthenticator().get_service('youtube', 'v3')
 
@@ -518,7 +506,6 @@ class YouTubeGenerator:
         if not self.channel_id:
             print("ERROR: YouTube Channel ID not set.")
             return False
-        FileManager().ensure_file_exists(self.output_file)
         print(f"Generating YouTube profile for channel {self.channel_id}...")
 
         channel_data = self._get_channel_stats()
@@ -586,9 +573,8 @@ class YouTubeGenerator:
 class ChessComGenerator:
     """Generates a Chess.com profile."""
 
-    def __init__(self, username: str = CHESSCOM_ID, output_file: str = CHESSCOM_OUTPUT_FILE):
+    def __init__(self, username: str = CHESSCOM_ID):
         self.username = username
-        self.output_file = output_file
         self.profile_content = []
         self.base_url = CHESSCOM_API_ENDPOINT
 
@@ -702,21 +688,5 @@ class ChessComGenerator:
                     self.profile_content.append(self._format_game_entry(game))
 
         print(f"Successfully generated Chess.com profile for {self.username}")
-        return '\n'.join(self.profile_content)nt(f"Successfully generated Chess.com profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return Falsefully generated Chess.com profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return Falsefully generated Chess.com profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return Falseor writing to file {self.output_file}: {e}")
-            return Falsefully generated Chess.com profile at {self.output_file}")
-            return True
-        except IOError as e:
-            print(f"Error writing to file {self.output_file}: {e}")
-            return False
+        print(f"Successfully generated Chess.com profile for {self.username}")
+        return '\n'.join(self.profile_content)

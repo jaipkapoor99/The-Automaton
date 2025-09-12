@@ -4,18 +4,14 @@
 
 # Default values
 ACTION="full-without-git"
-COMMIT_MESSAGE=""
+
 DOC_ID=""
 
 # Parse command-line arguments. Supports flags like -CommitMessage "msg" and a positional action.
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
-        -CommitMessage)
-        COMMIT_MESSAGE="$2"
-        shift 
-        shift 
-        ;;
+        
         -DocId)
         DOC_ID="$2"
         shift 
@@ -40,14 +36,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 # --- Logging Setup ---
-LOG_FILE="Temp/Logs.txt"
-mkdir -p "$(dirname "$LOG_FILE")"
-# Clear log file for the new run
-true > "$LOG_FILE"
 
-echo "============================================================" >> "$LOG_FILE"
-echo "Workflow started at: $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
-echo "============================================================" >> "$LOG_FILE"
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
@@ -70,29 +59,27 @@ write_step_header() {
     local title="$1"
     local step_number="$2"
     local separator="============================================================"
-    {
-        echo ""
-        echo "$separator"
-        if [[ -n "$step_number" && "$step_number" -gt 0 ]]; then
-            echo " STEP $step_number: $title"
-        else
-            echo " $title"
-        fi
-        echo "$separator"
-        echo ""
-    } >> "$LOG_FILE"
+    echo ""
+    echo "$separator"
+    if [[ -n "$step_number" && "$step_number" -gt 0 ]]; then
+        echo " STEP $step_number: $title"
+    else
+        echo " $title"
+    fi
+    echo "$separator"
+    echo ""
 }
 
 write_success() {
-    echo "[SUCCESS] $1" >> "$LOG_FILE"
+    echo "[SUCCESS] $1"
 }
 
 write_warning() {
-    echo "[WARNING] $1" >> "$LOG_FILE"
+    echo "[WARNING] $1"
 }
 
 write_error() {
-    echo "[ERROR] $1" >> "$LOG_FILE"
+    >&2 echo "[ERROR] $1"
 }
 
 # --- Error Handling ---
@@ -102,35 +89,14 @@ handle_error() {
     local line_no=$1
     # The BASH_COMMAND variable contains the command that was executed.
     write_error "An error occurred on line $line_no: command exited with status $exit_code."
-    echo "For help, run: ./scripts/workflow.sh --help" >> "$LOG_FILE"
+    
     exit "$exit_code"
 }
 trap 'handle_error $LINENO' ERR
 
 # --- Core Functions ---
 
-# Reads a commit message from the configured file, ignoring comments and empty lines.
-get_commit_message() {
-    local file_path="$1"
-    
-    if [[ ! -f "$file_path" ]]; then
-        write_warning "Commit message file not found. Creating it with default template."
-        # Using -e to interpret newline characters
-        echo -e "# Enter your commit message on the line below\n# Lines starting with # are treated as comments and will be ignored\n# The first non-comment line will be used as the commit message\n# Multi-line messages are supported\n" > "$file_path"
-    fi
-    
-    # Use grep to filter out comments and empty lines. `|| true` prevents exit on no match.
-    local content
-    content=$(grep -vE '^\s*#|^\s*$' "$file_path" || true)
-    
-    if [[ -z "$content" ]]; then
-        # This will trigger the error trap
-        >&2 echo "No valid commit message found in $file_path"
-        return 1
-    fi
-    
-    echo "$content"
-}
+
 
 # Invokes a function within the main Python script.
 invoke_python_function() {
@@ -138,10 +104,10 @@ invoke_python_function() {
     local description="$2"
     local doc_id_param="$3"
     
-    echo "[SETUP] Ensuring Python dependencies are installed..." >> "$LOG_FILE"
+    echo "[SETUP] Ensuring Python dependencies are installed..."
     pip install -r scripts/requirements.txt --quiet
     
-    echo "[PYTHON] $description..." >> "$LOG_FILE"
+    echo "[PYTHON] $description..."
     
     export THEAUTOMATON_BASH_CALLER=\'1\'
     
@@ -152,11 +118,11 @@ invoke_python_function() {
     
     # Execute python script, appending stdout and stderr to the log file.
     # The `set -e` and the ERR trap will handle any non-zero exit code.
-    python3 "${python_args[@]}" >> "$LOG_FILE" 2>&1
+    python3 "${python_args[@]}"
     
     unset THEAUTOMATON_BASH_CALLER
     
-    write_success "$description completed. See Temp/Logs.txt for details."
+    write_success "$description completed."
 }
 
 # Handles Git operations: add, commit, and push.
@@ -165,14 +131,14 @@ invoke_git_operations() {
     
     write_step_header "Git Operations" 2
     
-    echo "[GIT] Adding all changes to Git..." >> "$LOG_FILE"
-    git add . >> "$LOG_FILE" 2>&1
+    echo "[GIT] Adding all changes to Git..."
+    git add .
     
-    echo "[GIT] Committing with message: $message" >> "$LOG_FILE"
-    git commit -m "$message" >> "$LOG_FILE" 2>&1
+    echo "[GIT] Committing with message: $message"
+    git commit -m "$message"
     
-    echo "[GIT] Pushing to remote repository..." >> "$LOG_FILE"
-    git push >> "$LOG_FILE" 2>&1
+    echo "[GIT] Pushing to remote repository..."
+    git push
     
     write_success "Git operations completed successfully"
 }
@@ -192,11 +158,11 @@ ACTIONS:
   chess-com                     Generate Chess.com profile
   clear-temp                    Clear Temp directory
   codeforces                    Generate Codeforces profile
-  generate-and-sync-profiles    Generate all profiles and sync to Google Docs
-  git-commit                    Commit and push changes
+  
+  
   help                          Show this help
   leetcode                      Generate LeetCode profile
-  markdown-lint                 Validate markdown files only
+  
   
   steam-stats                   Fetch Steam gaming stats
   sync-cloud                    Sync all shared files to Google Docs
@@ -205,11 +171,11 @@ ACTIONS:
   sync-gdoc-leetcode            Sync LeetCode profile to Google Docs
   sync-gdoc-steam               Sync Steam stats to Google Docs
   sync-gdoc-youtube             Sync YouTube stats to Google Docs
-  sync-local                    Sync files to local cloud client (e.g., OneDrive)
-  youtube                       Generate YouTube profile
+  
+  
 
 OPTIONS:
-  -CommitMessage <message>      Specify commit message for \'full\' action
+  
   -DocId <id>                   Specify Google Doc ID for a sync-gdoc action
   -h, --help                    Show this help message
 EOF
@@ -224,77 +190,43 @@ if [[ "$ACTION" == "help" ]]; then
 fi
 
 # Get paths from config
-TEMP_DIR=$(get_config_value "paths.temp")
-COMMIT_MSG_FILENAME=$(get_config_value "paths.commit_message_file")
-COMMIT_MESSAGE_FILE="$TEMP_DIR/$COMMIT_MSG_FILENAME"
+
 
 write_step_header "The-Automaton Repository Workflow"
-echo "Action: $ACTION" >> "$LOG_FILE"
+echo "Action: $ACTION"
 
 # Main control flow based on the action
 case "$ACTION" in
     chess-com)
-        python3 -c "from scripts.modules.profile_generator import ChessComGenerator; print(ChessComGenerator().generate())" >> "$LOG_FILE" 2>&1
-        ;;
-    clear-temp)
-        python3 -c "from scripts.modules.file_operations import FileManager; FileManager().clear_temp_directory()" >> "$LOG_FILE" 2>&1
+        invoke_python_function "chess-com" "Generating Chess.com profile and syncing to Google Docs"
         ;;
     codeforces)
-        python3 -c "from scripts.modules.profile_generator import CodeforcesGenerator; print(CodeforcesGenerator().generate())" >> "$LOG_FILE" 2>&1
-        ;;
-    git-commit)
-        python3 -c "from scripts.modules.git_operations import GitManager; GitManager().commit_and_push()" >> "$LOG_FILE" 2>&1
+        invoke_python_function "codeforces" "Generating Codeforces profile and syncing to Google Docs"
         ;;
     leetcode)
-        python3 -c "from scripts.modules.profile_generator import LeetCodeGenerator; print(LeetCodeGenerator().generate())" >> "$LOG_FILE" 2>&1
+        invoke_python_function "leetcode" "Generating LeetCode profile and syncing to Google Docs"
         ;;
-    markdown-lint)
-        python3 -c "from scripts.modules.validation import Validator; Validator().lint_markdown_files()" >> "$LOG_FILE" 2>&1
-        ;;
-    
     steam-stats)
-        python3 -c "from scripts.modules.profile_generator import SteamStatsGenerator; print(SteamStatsGenerator().generate())" >> "$LOG_FILE" 2>&1
+        invoke_python_function "steam-stats" "Generating Steam stats and syncing to Google Docs"
         ;;
     youtube)
-        python3 -c "from scripts.modules.profile_generator import YouTubeGenerator; print(YouTubeGenerator().generate())" >> "$LOG_FILE" 2>&1
+        invoke_python_function "youtube" "Generating YouTube profile and syncing to Google Docs"
         ;;
     full-without-git)
-        write_step_header "Pre-Commit Steps" 1
-        
-        CF_CONTENT=$(python3 -c "from scripts.modules.profile_generator import CodeforcesGenerator; print(CodeforcesGenerator().generate())" 2>&1)
-        LC_CONTENT=$(python3 -c "from scripts.modules.profile_generator import LeetCodeGenerator; print(LeetCodeGenerator().generate())" 2>&1)
-        STEAM_CONTENT=$(python3 -c "from scripts.modules.profile_generator import SteamStatsGenerator; print(SteamStatsGenerator().generate())" 2>&1)
-        YT_CONTENT=$(python3 -c "from scripts.modules.profile_generator import YouTubeGenerator; print(YouTubeGenerator().generate())" 2>&1)
-        CHESS_CONTENT=$(python3 -c "from scripts.modules.profile_generator import ChessComGenerator; print(ChessComGenerator().generate())" 2>&1)
-        
-        echo "[INFO] Skipping Git operations as per action." >> "$LOG_FILE"
-        
-        write_step_header "Post-Push Steps" 3
-        python3 -c "from scripts.modules.cloud_sync import CloudSyncer; CloudSyncer().sync_all_profiles_to_gdocs({'codeforces': '''$CF_CONTENT''', 'leetcode': '''$LC_CONTENT''', 'steam': '''$STEAM_CONTENT''', 'youtube': '''$YT_CONTENT''', 'chesscom': '''$CHESS_CONTENT'''})" >> "$LOG_FILE" 2>&1
+        write_step_header "Generating and Syncing All Profiles" 1
+        invoke_python_function "codeforces" "Codeforces profile"
+        invoke_python_function "leetcode" "LeetCode profile"
+        invoke_python_function "steam-stats" "Steam stats"
+        invoke_python_function "youtube" "YouTube profile"
+        invoke_python_function "chess-com" "Chess.com profile"
         ;;
     full)
-        MESSAGE=""
-        if [[ -n "$COMMIT_MESSAGE" ]]; then
-            MESSAGE="$COMMIT_MESSAGE"
-        else
-            echo "[INFO] Reading commit message from $COMMIT_MESSAGE_FILE..." >> "$LOG_FILE"
-            # get_commit_message will cause the script to exit on failure
-            MESSAGE=$(get_commit_message "$COMMIT_MESSAGE_FILE")
-        fi
-        echo "[INFO] Using commit message: $MESSAGE" >> "$LOG_FILE"
-        
-        write_step_header "Pre-Commit Steps" 1
-        
-        CF_CONTENT=$(python3 -c "from scripts.modules.profile_generator import CodeforcesGenerator; print(CodeforcesGenerator().generate())" 2>&1)
-        LC_CONTENT=$(python3 -c "from scripts.modules.profile_generator import LeetCodeGenerator; print(LeetCodeGenerator().generate())" 2>&1)
-        STEAM_CONTENT=$(python3 -c "from scripts.modules.profile_generator import SteamStatsGenerator; print(SteamStatsGenerator().generate())" 2>&1)
-        YT_CONTENT=$(python3 -c "from scripts.modules.profile_generator import YouTubeGenerator; print(YouTubeGenerator().generate())" 2>&1)
-        CHESS_CONTENT=$(python3 -c "from scripts.modules.profile_generator import ChessComGenerator; print(ChessComGenerator().generate())" 2>&1)
-        
-        invoke_git_operations "$MESSAGE"
-        
-        write_step_header "Post-Push Steps" 3
-        python3 -c "from scripts.modules.cloud_sync import CloudSyncer; CloudSyncer().sync_all_profiles_to_gdocs({'codeforces': '''$CF_CONTENT''', 'leetcode': '''$LC_CONTENT''', 'steam': '''$STEAM_CONTENT''', 'youtube': '''$YT_CONTENT''', 'chesscom': '''$CHESS_CONTENT'''})" >> "$LOG_FILE" 2>&1
+        write_step_header "Generating and Syncing All Profiles" 1
+        invoke_python_function "codeforces" "Codeforces profile"
+        invoke_python_function "leetcode" "LeetCode profile"
+        invoke_python_function "steam-stats" "Steam stats"
+        invoke_python_function "youtube" "YouTube profile"
+        invoke_python_function "chess-com" "Chess.com profile"
         ;;
     *)
         # This will trigger the error trap
@@ -303,12 +235,6 @@ case "$ACTION" in
         ;;
 esac
 
-# --- Final Success Message ---
-{
-    echo ""
-    echo "============================================================"
-    echo "Workflow finished successfully at: $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "============================================================"
-} >> "$LOG_FILE"
+
 
 exit 0
