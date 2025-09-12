@@ -1,15 +1,9 @@
 name: The Automaton Workflow
 
 on:
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Action to perform (e.g., full, full-without-git)'
-        required: false
-        default: 'full-without-git'
-      commit_message:
-        description: 'Commit message for "full" action'
-        required: false
+  push:
+    branches:
+      - main
 
 jobs:
   run-the-automaton:
