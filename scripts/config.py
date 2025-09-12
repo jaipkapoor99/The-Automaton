@@ -67,7 +67,7 @@ GOOGLE_DOC_CHESSCOM_ID = os.environ.get("GOOGLE_DOC_CHESSCOM_ID")
 # --- Google OAuth (from .env) ---
 GOOGLE_AUTH_URL_FILE = os.path.join(TEMP_DIR, cfg['auth']['url_file'])
 GOOGLE_AUTH_CODE_FILE = os.path.join(TEMP_DIR, cfg['auth']['code_file'])
-GOOGLE_SERVICE_ACCOUNT_KEY_PATH = os.path.join(ROOT_DIR, "credentials.json")
+GOOGLE_SERVICE_ACCOUNT_KEY_PATH = os.path.join(ROOT_DIR, "Temp", "service_account_key.json")
 GOOGLE_PROJECT_ID = os.environ.get("GOOGLE_PROJECT_ID")
 GOOGLE_AUTH_URI = os.environ.get("GOOGLE_AUTH_URI")
 GOOGLE_TOKEN_URI = os.environ.get("GOOGLE_TOKEN_URI")
