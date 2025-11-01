@@ -63,6 +63,12 @@ GOOGLE_DOC_STEAM_ID = os.environ.get("GOOGLE_DOC_STEAM_ID")
 GOOGLE_DOC_YOUTUBE_ID = os.environ.get("GOOGLE_DOC_YOUTUBE_ID")
 GOOGLE_DOC_CHESSCOM_ID = os.environ.get("GOOGLE_DOC_CHESSCOM_ID")
 
+# --- Google Docs ---
+GOOGLE_DOCS_CONFIG = cfg.get('google_docs', {})
+GOOGLE_DOCS_TIMEOUT = GOOGLE_DOCS_CONFIG.get('timeout', 60)
+GOOGLE_DOCS_FOLDER_ID = GOOGLE_DOCS_CONFIG.get('folder_id')
+GOOGLE_DOCS_DOCUMENT_ID = GOOGLE_DOCS_CONFIG.get('document_id')
+
 # --- Google OAuth (from .env) ---
 GOOGLE_AUTH_URL_FILE = os.path.join(TEMP_DIR, cfg['auth']['url_file'])
 GOOGLE_AUTH_CODE_FILE = os.path.join(TEMP_DIR, cfg['auth']['code_file'])

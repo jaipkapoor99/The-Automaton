@@ -4,6 +4,7 @@ Handles cloud synchronization tasks for The-Automaton repository, including sync
 to local directories and Google Drive.
 """
 import time
+import socket
 from scripts.config import (
     GOOGLE_DOC_CODEFORCES_ID, GOOGLE_DOC_LEETCODE_ID, GOOGLE_DOC_STEAM_ID,
     GOOGLE_DOC_YOUTUBE_ID, GOOGLE_DOC_CHESSCOM_ID,
@@ -80,10 +81,14 @@ class CloudSyncer:
 
                 print(f"Successfully synced content to Google Doc.")
                 return True
-            except HttpError as err:
-                if err.resp.status in [403, 429, 500, 503] and attempt < max_retries - 1:
+            except (HttpError, socket.timeout) as err:
+                if isinstance(err, HttpError) and err.resp.status in [403, 429, 500, 503] and attempt < max_retries - 1:
                     delay = initial_delay * (2 ** attempt)
                     print(f"Google API error (status {err.resp.status}). Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                elif isinstance(err, socket.timeout) and attempt < max_retries - 1:
+                    delay = initial_delay * (2 ** attempt)
+                    print(f"A timeout occurred. Retrying in {delay} seconds...")
                     time.sleep(delay)
                 else:
                     print(f"A Google API error occurred after {attempt + 1} attempts: {err}")

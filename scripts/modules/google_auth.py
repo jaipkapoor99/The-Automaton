@@ -7,7 +7,7 @@ from scripts.config import (
     TOKEN_FILE, SCOPES, TEMP_DIR,
     GOOGLE_PROJECT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URIS,
-    GOOGLE_AUTH_URL_FILE, GOOGLE_SERVICE_ACCOUNT_KEY_PATH
+    GOOGLE_AUTH_URL_FILE, GOOGLE_SERVICE_ACCOUNT_KEY_PATH, GOOGLE_DOCS_TIMEOUT
 )
 
 try:
@@ -90,7 +90,7 @@ class GoogleAuthenticator:
             print("Service account authentication failed. Cannot create service.")
             return None
         try:
-            service = build(service_name, version, credentials=self.creds)
+            service = build(service_name, version, credentials=self.creds, cache_discovery=False, client_options={'timeout': GOOGLE_DOCS_TIMEOUT})
             return service
         except Exception as e:
             print(f"Failed to create service {service_name} v{version} with service account: {e}")
@@ -103,7 +103,7 @@ class GoogleAuthenticator:
             print("User OAuth authentication failed. Cannot create service.")
             return None
         try:
-            service = build(service_name, version, credentials=user_creds)
+            service = build(service_name, version, credentials=user_creds, cache_discovery=False, client_options={'timeout': GOOGLE_DOCS_TIMEOUT})
             return service
         except Exception as e:
             print(f"Failed to create service {service_name} v{version} with user OAuth: {e}")

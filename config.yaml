@@ -38,4 +38,16 @@ cloud:
     - "https://www.googleapis.com/auth/documents"
     - "https://www.googleapis.com/auth/youtube.readonly"
 
+# -------------------
+# --- Google Docs ---
+# -------------------
+# Google Docs API settings
+google_docs:
+  # Timeout for API requests in seconds
+  timeout: 6000
+  # Folder ID for "The Automaton" in Google Drive
+  folder_id: "YOUR_FOLDER_ID_HERE"
+  # Document ID for the profile
+  document_id: "YOUR_DOCUMENT_ID_HERE"
+
 
