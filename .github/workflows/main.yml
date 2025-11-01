@@ -24,9 +24,8 @@ jobs:
         name: gcp-credentials
         path: ${{ steps.auth.outputs.credentials_file_path }}
 
-  generate-and-sync-codeforces:
+  generate-codeforces:
     runs-on: ubuntu-latest
-    needs: authenticate-service-account
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -39,36 +38,60 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Download service account credentials
-      uses: actions/download-artifact@v4
-      with:
-        name: gcp-credentials
-        path: gcp-creds
-
-    - name: Prepare service account file for scripts
-      run: |
-        mkdir -p Temp
-        cp gcp-creds/*.json Temp/service_account_key.json
-
-    - name: Run Codeforces Workflow
+    - name: Run Codeforces Generation
       run: |
         chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh codeforces
+        ./scripts/workflow.sh codeforces-generate
       env:
-        EMAIL_ID: ${{ secrets.EMAIL_ID }}
         CODEFORCES_ID: ${{ secrets.CODEFORCES_ID }}
+
+    - name: Upload Codeforces profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: codeforces-profile
+        path: Temp/codeforces_profile.txt
+
+  sync-codeforces:
+    runs-on: ubuntu-latest
+    needs: [authenticate-service-account, generate-codeforces]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Download service account credentials
+      uses: actions/download-artifact@v4
+      with:
+        name: gcp-credentials
+        path: gcp-creds
+
+    - name: Prepare service account file for scripts
+      run: |
+        mkdir -p Temp
+        cp gcp-creds/*.json Temp/service_account_key.json
+
+    - name: Download Codeforces profile artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: codeforces-profile
+        path: Temp
+
+    - name: Run Codeforces Sync
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh codeforces-sync
+      env:
         GOOGLE_DOC_CODEFORCES_ID: ${{ secrets.GOOGLE_DOC_CODEFORCES_ID }}
-        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
-        GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
-        GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_X509_CERT_URL }}
-        GOOGLE_REDIRECT_URIS: ${{ secrets.GOOGLE_REDIRECT_URIS }}
 
-  generate-and-sync-leetcode:
+  generate-leetcode:
     runs-on: ubuntu-latest
-    needs: authenticate-service-account
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -81,36 +104,22 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
 
-    - name: Download service account credentials
-      uses: actions/download-artifact@v4
-      with:
-        name: gcp-credentials
-        path: gcp-creds
-
-    - name: Prepare service account file for scripts
-      run: |
-        mkdir -p Temp
-        cp gcp-creds/*.json Temp/service_account_key.json
-
-    - name: Run LeetCode Workflow
+    - name: Run LeetCode Generation
       run: |
         chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh leetcode
+        ./scripts/workflow.sh leetcode-generate
       env:
-        EMAIL_ID: ${{ secrets.EMAIL_ID }}
         LEETCODE_ID: ${{ secrets.LEETCODE_ID }}
-        GOOGLE_DOC_LEETCODE_ID: ${{ secrets.GOOGLE_DOC_LEETCODE_ID }}
-        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
-        GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
-        GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_X509_CERT_URL }}
-        GOOGLE_REDIRECT_URIS: ${{ secrets.GOOGLE_REDIRECT_URIS }}
 
-  generate-and-sync-steam:
+    - name: Upload LeetCode profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: leetcode-profile
+        path: Temp/leetcode_profile.txt
+
+  sync-leetcode:
     runs-on: ubuntu-latest
-    needs: authenticate-service-account
+    needs: [authenticate-service-account, generate-leetcode]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -134,26 +143,50 @@ jobs:
         mkdir -p Temp
         cp gcp-creds/*.json Temp/service_account_key.json
 
-    - name: Run Steam Workflow
+    - name: Download LeetCode profile artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: leetcode-profile
+        path: Temp
+
+    - name: Run LeetCode Sync
       run: |
         chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh steam-stats
+        ./scripts/workflow.sh leetcode-sync
       env:
-        EMAIL_ID: ${{ secrets.EMAIL_ID }}
+        GOOGLE_DOC_LEETCODE_ID: ${{ secrets.GOOGLE_DOC_LEETCODE_ID }}
+
+  generate-steam:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run Steam Generation
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh steam-generate
+      env:
         STEAM_ID: ${{ secrets.STEAM_ID }}
         STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
-        GOOGLE_DOC_STEAM_ID: ${{ secrets.GOOGLE_DOC_STEAM_ID }}
-        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
-        GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
-        GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_X509_CERT_URL }}
-        GOOGLE_REDIRECT_URIS: ${{ secrets.GOOGLE_REDIRECT_URIS }}
 
-  generate-and-sync-youtube:
+    - name: Upload Steam profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: steam-profile
+        path: Temp/steam_profile.txt
+
+  sync-steam:
     runs-on: ubuntu-latest
-    needs: authenticate-service-account
+    needs: [authenticate-service-account, generate-steam]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -171,35 +204,61 @@ jobs:
       with:
         name: gcp-credentials
         path: gcp-creds
-        
+
+    - name: Prepare service account file for scripts
+      run: |
+        mkdir -p Temp
+        cp gcp-creds/*.json Temp/service_account_key.json
+
+    - name: Download Steam profile artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: steam-profile
+        path: Temp
+
+    - name: Run Steam Sync
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh steam-sync
+      env:
+        GOOGLE_DOC_STEAM_ID: ${{ secrets.GOOGLE_DOC_STEAM_ID }}
+
+  generate-youtube:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
     - name: Prepare user OAuth token file for scripts
       run: |
         echo '${{ secrets.GOOGLE_OAUTH_TOKEN_JSON }}' > token.json
 
-    - name: Prepare service account file for scripts
-      run: |
-        mkdir -p Temp
-        cp gcp-creds/*.json Temp/service_account_key.json
-
-    - name: Run YouTube Workflow
+    - name: Run YouTube Generation
       run: |
         chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh youtube
+        ./scripts/workflow.sh youtube-generate
       env:
-        EMAIL_ID: ${{ secrets.EMAIL_ID }}
-        YOUTUBE_CHANNEL_ID: ${{ secrets.YOUTUBE_CHANNEL_ID }}
-        GOOGLE_DOC_YOUTUBE_ID: ${{ secrets.GOOGLE_DOC_YOUTUBE_ID }}
-        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
         GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
-        GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
-        GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_X509_CERT_URL }}
-        GOOGLE_REDIRECT_URIS: ${{ secrets.GOOGLE_REDIRECT_URIS }}
+        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
 
-  generate-and-sync-chesscom:
+    - name: Upload YouTube profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: youtube-profile
+        path: Temp/youtube_profile.txt
+
+  sync-youtube:
     runs-on: ubuntu-latest
-    needs: authenticate-service-account
+    needs: [authenticate-service-account, generate-youtube]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -223,18 +282,81 @@ jobs:
         mkdir -p Temp
         cp gcp-creds/*.json Temp/service_account_key.json
 
-    - name: Run Chess.com Workflow
+    - name: Download YouTube profile artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: youtube-profile
+        path: Temp
+
+    - name: Run YouTube Sync
       run: |
         chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh chess-com
+        ./scripts/workflow.sh youtube-sync
       env:
-        EMAIL_ID: ${{ secrets.EMAIL_ID }}
+        GOOGLE_DOC_YOUTUBE_ID: ${{ secrets.GOOGLE_DOC_YOUTUBE_ID }}
+
+  generate-chesscom:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Run Chess.com Generation
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh chesscom-generate
+      env:
         CHESSCOM_ID: ${{ secrets.CHESSCOM_ID }}
+
+    - name: Upload Chess.com profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: chesscom-profile
+        path: Temp/chesscom_profile.txt
+
+  sync-chesscom:
+    runs-on: ubuntu-latest
+    needs: [authenticate-service-account, generate-chesscom]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+
+    - name: Download service account credentials
+      uses: actions/download-artifact@v4
+      with:
+        name: gcp-credentials
+        path: gcp-creds
+
+    - name: Prepare service account file for scripts
+      run: |
+        mkdir -p Temp
+        cp gcp-creds/*.json Temp/service_account_key.json
+
+    - name: Download Chess.com profile artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: chesscom-profile
+        path: Temp
+
+    - name: Run Chess.com Sync
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh chesscom-sync
+      env:
         GOOGLE_DOC_CHESSCOM_ID: ${{ secrets.GOOGLE_DOC_CHESSCOM_ID }}
-        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-        GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
-        GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
-        GOOGLE_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_X509_CERT_URL }}
-        GOOGLE_REDIRECT_URIS: ${{ secrets.GOOGLE_REDIRECT_URIS }}
