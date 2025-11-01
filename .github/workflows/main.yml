@@ -360,3 +360,22 @@ jobs:
         ./scripts/workflow.sh chesscom-sync
       env:
         GOOGLE_DOC_CHESSCOM_ID: ${{ secrets.GOOGLE_DOC_CHESSCOM_ID }}
+
+  cleanup-artifacts:
+    runs-on: ubuntu-latest
+    needs: [sync-codeforces, sync-leetcode, sync-steam, sync-youtube, sync-chesscom]
+    if: always()
+    steps:
+    - name: Remove all artifacts
+      uses: c-hive/gha-remove-artifacts@v1
+      with:
+        age: '0' # The age of artifacts to remove, e.g., '1d', '2h', '3m'. '0' means all.
+        skip-recent: '0' # Do not skip any recent artifacts.
+        # Optional: Specify names of artifacts to remove. If not set, all artifacts are removed.
+        # names: |
+        #   gcp-credentials
+        #   codeforces-profile
+        #   leetcode-profile
+        #   steam-profile
+        #   youtube-profile
+        #   chesscom-profile

@@ -8,3 +8,4 @@
 - Configuration is managed through `config.yaml` for general settings (e.g., API endpoints, file paths) and `.env` for sensitive data.
 - The user prefers clear, concise commit messages that follow conventional formats.
 - The `sequential-thinking` MCP server must always be used.
+- **Git and Workflow Commands**: The Gemini CLI should NOT run any `git` commands or workflow commands (e.g., `workflow.sh`, `workflow.ps1`). The user handles these operations exclusively via the VS Code GUI.
