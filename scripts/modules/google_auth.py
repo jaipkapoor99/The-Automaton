@@ -3,6 +3,7 @@
 Handles Google API Authentication using OAuth 2.0.
 """
 import os
+import socket
 from scripts.config import (
     TOKEN_FILE, SCOPES, TEMP_DIR,
     GOOGLE_PROJECT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
@@ -89,12 +90,17 @@ class GoogleAuthenticator:
         if not self.creds:
             print("Service account authentication failed. Cannot create service.")
             return None
+        
+        original_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(GOOGLE_DOCS_TIMEOUT)
         try:
-            service = build(service_name, version, credentials=self.creds, cache_discovery=False, client_options={'timeout': GOOGLE_DOCS_TIMEOUT})
+            service = build(service_name, version, credentials=self.creds, cache_discovery=False)
             return service
         except Exception as e:
             print(f"Failed to create service {service_name} v{version} with service account: {e}")
             return None
+        finally:
+            socket.setdefaulttimeout(original_timeout)
 
     def get_user_service(self, service_name, version):
         """Builds and returns an authorized API service object using user-based OAuth credentials."""
@@ -102,9 +108,14 @@ class GoogleAuthenticator:
         if not user_creds:
             print("User OAuth authentication failed. Cannot create service.")
             return None
+        
+        original_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(GOOGLE_DOCS_TIMEOUT)
         try:
-            service = build(service_name, version, credentials=user_creds, cache_discovery=False, client_options={'timeout': GOOGLE_DOCS_TIMEOUT})
+            service = build(service_name, version, credentials=user_creds, cache_discovery=False)
             return service
         except Exception as e:
             print(f"Failed to create service {service_name} v{version} with user OAuth: {e}")
             return None
+        finally:
+            socket.setdefaulttimeout(original_timeout)
