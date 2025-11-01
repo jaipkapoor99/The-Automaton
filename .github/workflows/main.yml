@@ -7,6 +7,9 @@ on:
   schedule:
     - cron: '0 18,6 * * *'
 
+permissions:
+  actions: write
+
 jobs:
   authenticate-service-account:
     runs-on: ubuntu-latest
