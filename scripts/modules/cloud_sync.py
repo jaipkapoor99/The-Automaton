@@ -28,7 +28,7 @@ class CloudSyncer:
         """
         Generic function to sync a string content to a specific Google Doc.
         This function will completely overwrite the document's content.
-        Includes retry logic with exponential backoff.
+        Includes retry logic with exponential backoff and content chunking for large inputs.
         """
         if not self.authenticator:
             print("ERROR: Google Authenticator not available.")
@@ -42,39 +42,42 @@ class CloudSyncer:
                 docs_service = self.authenticator.get_service("docs", "v1")
                 if not docs_service:
                     return False
-                
-                file_content = content_string
 
-                if not file_content:
-                    print(f"WARNING: Source content is empty. Clearing Google Doc.")
-                
+                # 1. Clear the document content first
                 document = docs_service.documents().get(documentId=doc_id, fields="body(content)").execute()
                 content = document.get('body', {}).get('content', [])
-                
-                requests = []
                 if content:
                     end_of_doc_index = content[-1].get('endIndex', 0)
                     if end_of_doc_index > 2:
-                        requests.append({
+                        delete_request = {
                             "deleteContentRange": {
-                                "range": {
-                                    "startIndex": 1,
-                                    "endIndex": end_of_doc_index - 1
-                                }
+                                "range": {"startIndex": 1, "endIndex": end_of_doc_index - 1}
+                            }
+                        }
+                        docs_service.documents().batchUpdate(documentId=doc_id, body={"requests": [delete_request]}).execute()
+
+                # 2. Insert new content in batches
+                if content_string:
+                    CHUNK_SIZE = 100000  # characters per chunk
+                    REQUESTS_PER_BATCH = 10  # insert requests per batchUpdate call
+
+                    chunks = [content_string[i:i + CHUNK_SIZE] for i in range(0, len(content_string), CHUNK_SIZE)]
+                    
+                    all_insert_requests = []
+                    for chunk in chunks:
+                        all_insert_requests.append({
+                            "insertText": {
+                                "endOfSegmentLocation": {},  # Appends to the end of the document body
+                                "text": chunk
                             }
                         })
+                    
+                    for i in range(0, len(all_insert_requests), REQUESTS_PER_BATCH):
+                        batch = all_insert_requests[i:i + REQUESTS_PER_BATCH]
+                        docs_service.documents().batchUpdate(documentId=doc_id, body={"requests": batch}).execute()
+                else:
+                    print("WARNING: Source content is empty. Google Doc is now empty.")
 
-                if file_content:
-                    requests.append({
-                        "insertText": {
-                            "location": {"index": 1},
-                            "text": file_content
-                        }
-                    })
-
-                if requests:
-                    docs_service.documents().batchUpdate(documentId=doc_id, body={"requests": requests}).execute()
-                
                 print(f"Successfully synced content to Google Doc.")
                 return True
             except HttpError as err:

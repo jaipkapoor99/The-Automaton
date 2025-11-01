@@ -7,4 +7,4 @@
   - **AI Integration**: Utilizing Perplexity AI for potential data processing or summarization tasks.
 - Configuration is managed through `config.yaml` for general settings (e.g., API endpoints, file paths) and `.env` for sensitive data.
 - The user prefers clear, concise commit messages that follow conventional formats.
-- The `sequential-thinking` MCP tool must be used always.
+- The `sequential-thinking` MCP server must always be used.
