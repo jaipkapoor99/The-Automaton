@@ -4,7 +4,7 @@ Handles Google API Authentication using OAuth 2.0.
 """
 import os
 from scripts.config import (
-    TOKEN_FILE, SCOPES,
+    TOKEN_FILE, SCOPES, TEMP_DIR,
     GOOGLE_PROJECT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URIS,
     GOOGLE_AUTH_URL_FILE, GOOGLE_SERVICE_ACCOUNT_KEY_PATH
@@ -72,6 +72,7 @@ class GoogleAuthenticator:
                 
                 flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
                 
+                os.makedirs(TEMP_DIR, exist_ok=True) # Ensure TEMP_DIR exists
                 auth_url, _ = flow.authorization_url(prompt='consent')
                 with open(GOOGLE_AUTH_URL_FILE, "w") as f:
                     f.write(auth_url)

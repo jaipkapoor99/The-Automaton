@@ -13,7 +13,7 @@ import string
 from typing import Dict, Any
 from scripts.config import (
     CF_HANDLE, LEETCODE_USERNAME,
-    LEETCODE_API_ENDPOINT, STEAM_ID, STEAM_API_KEY, STEAM_API_ENDPOINT, YOUTUBE_CHANNEL_ID,
+    LEETCODE_API_ENDPOINT, STEAM_ID, STEAM_API_KEY, STEAM_API_ENDPOINT,
     CF_API_KEY, CF_API_SECRET, CODEFORCES_API_ENDPOINT,
     CHESSCOM_ID, CHESSCOM_API_ENDPOINT
 )
@@ -413,10 +413,9 @@ class SteamStatsGenerator:
 class YouTubeGenerator:
     """Generates a YouTube profile."""
 
-    def __init__(self, channel_id=YOUTUBE_CHANNEL_ID):
-        self.channel_id = channel_id
+    def __init__(self):
         self.profile_content = []
-        self.youtube_service = GoogleAuthenticator().get_service('youtube', 'v3')
+        self.youtube_service = GoogleAuthenticator().get_user_service('youtube', 'v3')
 
     def _get_channel_stats(self):
         if not self.youtube_service:
@@ -424,7 +423,7 @@ class YouTubeGenerator:
         try:
             request = self.youtube_service.channels().list(
                 part="snippet,contentDetails,statistics",
-                id=self.channel_id
+                mine=True
             )
             response = request.execute()
             return response.get('items', [{}])[0]
@@ -511,10 +510,7 @@ class YouTubeGenerator:
 
     def generate(self):
         """Fetches and generates the YouTube profile."""
-        if not self.channel_id:
-            print("ERROR: YouTube Channel ID not set.")
-            return False
-        print(f"Generating YouTube profile for channel {self.channel_id}...")
+        print(f"Generating YouTube profile...")
 
         channel_data = self._get_channel_stats()
         if not channel_data:
@@ -575,7 +571,7 @@ class YouTubeGenerator:
                 title = snippet.get('title', 'N/A')
                 self.profile_content.append(f"- {title}")
 
-        print(f"Successfully generated YouTube profile for channel {self.channel_id}")
+        print(f"Successfully generated YouTube profile for channel {snippet.get('title', 'N/A')}")
         return '\n'.join(self.profile_content)
 
 class ChessComGenerator:

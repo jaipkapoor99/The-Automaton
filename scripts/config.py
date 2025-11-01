@@ -26,7 +26,6 @@ CF_HANDLE = os.environ.get("CODEFORCES_ID")
 LEETCODE_USERNAME = os.environ.get("LEETCODE_ID")
 CHESSCOM_ID = os.environ.get("CHESSCOM_ID")
 STEAM_ID = os.environ.get("STEAM_ID")
-YOUTUBE_CHANNEL_ID = os.environ.get("YOUTUBE_CHANNEL_ID")
 GITHUB_ID = os.environ.get("GITHUB_ID")
 
 # --- General Paths (constructed from YAML) ---
