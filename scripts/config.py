@@ -18,7 +18,7 @@ load_dotenv(dotenv_path=os.path.join(ROOT_DIR, ".env"))
 # --- Load YAML Configuration ---
 # Load the static configuration from the YAML file.
 CONFIG_YAML_PATH = os.path.join(ROOT_DIR, "config.yaml")
-with open(CONFIG_YAML_PATH, "r") as f:
+with open(CONFIG_YAML_PATH, "r", encoding="utf-8") as f:
     cfg = yaml.safe_load(f)
 
 # --- User IDs ---
@@ -85,8 +85,12 @@ CODING_DIR = os.path.dirname(ROOT_DIR)
 # --- File Operations ---
 
 
-def print_section_header(title):
-    """Prints a formatted section header."""
+def print_section_header(title: str):
+    """Prints a formatted section header.
+
+    Args:
+        title (str): The title to be printed in the header.
+    """
     try:
         print("\n" + "=" * 20)
         print(f" {title.upper()} ")
