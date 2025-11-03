@@ -93,14 +93,17 @@ class CodeforcesGenerator:
             return {}
         print(f"Generating exhaustive Codeforces profile for {self.handle}...")
 
-        profile_data = {}
+        aggregated_data = []
 
         # User Info and Global Rank
         user_info = self._fetch_data("user.info", params={"handles": self.handle})
         if user_info:
             user = user_info[0]
-            user_summary = [
+            aggregated_data.append(["--- User Summary ---"])
+            aggregated_data.append(
                 ["Metric", "Value"],
+            )
+            aggregated_data.extend([
                 ["Handle", user.get("handle", "N/A")],
                 ["Rating", f"{user.get('rating', 'N/A')} ({user.get('rank', 'N/A')})"],
                 [
@@ -114,7 +117,7 @@ class CodeforcesGenerator:
                         user.get("registrationTimeSeconds", 0)
                     ).strftime("%Y-%m-%d"),
                 ],
-            ]
+            ])
 
             rated_list = self._fetch_data(
                 "user.ratedList", params={"activeOnly": "true"}
@@ -130,12 +133,12 @@ class CodeforcesGenerator:
                         -1,
                     )
                     if rank != -1:
-                        user_summary.append(
+                        aggregated_data.append(
                             ["Global Rank (Active)", f"{rank + 1} / {len(rated_list)}"]
                         )
                 except (StopIteration, KeyError):
                     pass
-            profile_data["User Summary"] = user_summary
+            aggregated_data.append([])  # Blank row
 
         # Submissions Analysis (All submissions)
         all_submissions = self._fetch_data(
@@ -151,27 +154,31 @@ class CodeforcesGenerator:
                 for tag in s["problem"].get("tags", [])
             )
 
-            verdicts_data = [["Verdict", "Count"]]
+            aggregated_data.append(["--- Verdicts ---"])
+            aggregated_data.append(["Verdict", "Count"])
             for verdict, count in verdicts.most_common():
-                verdicts_data.append([verdict, count])
-            profile_data["Verdicts"] = verdicts_data
+                aggregated_data.append([verdict, count])
+            aggregated_data.append([])
 
-            languages_data = [["Language", "Count"]]
+            aggregated_data.append(["--- Languages ---"])
+            aggregated_data.append(["Language", "Count"])
             for lang, count in languages.most_common():
-                languages_data.append([lang, count])
-            profile_data["Languages"] = languages_data
+                aggregated_data.append([lang, count])
+            aggregated_data.append([])
 
-            tags_data = [["Tag", "Count"]]
+            aggregated_data.append(["--- Problem Tags (Top 15) ---"])
+            aggregated_data.append(["Tag", "Count"])
             for tag, count in tags.most_common(15):
-                tags_data.append([tag, count])
-            profile_data["Problem Tags"] = tags_data
+                aggregated_data.append([tag, count])
+            aggregated_data.append([])
 
         # Contest Performance and Hacks
         rating_history = self._fetch_data("user.rating", params={"handle": self.handle})
         if rating_history:
-            recent_contests_data = [
+            aggregated_data.append(["--- Recent Contest Performance ---"])
+            aggregated_data.append(
                 ["Contest", "ID", "Rank", "Rating Change", "New Rating", "Hacks"]
-            ]
+            )
             recent_contests = sorted(
                 rating_history, key=lambda x: x["ratingUpdateTimeSeconds"], reverse=True
             )[:5]
@@ -195,7 +202,7 @@ class CodeforcesGenerator:
                             ]
                         )
 
-                recent_contests_data.append(
+                aggregated_data.append(
                     [
                         contest["contestName"],
                         contest_id,
@@ -205,88 +212,26 @@ class CodeforcesGenerator:
                         hacks_summary,
                     ]
                 )
-            profile_data["Recent Contest Performance"] = recent_contests_data
+            aggregated_data.append([])
 
         # Friends
         friends = self._fetch_data(
             "user.friends", params={"onlyOnline": "false"}, authorized=True
         )
+        aggregated_data.append(["--- Friends ---"])
+        aggregated_data.append(["Friend Handle"])
         if friends:
-            profile_data["Friends"] = [["Friend Handle"]] + [[f] for f in friends]
+            aggregated_data.extend([[f] for f in friends])
         else:
-            profile_data["Friends"] = [
-                ["Friend Handle"],
+            aggregated_data.append(
                 [
                     "Could not retrieve friends list. This method requires authorization, or the API keys are missing/invalid."
                 ],
-            ]
+            )
+        aggregated_data.append([])
 
-        # Problem Submission History
-        if all_submissions:
-            submissions_by_problem = {}
-            for submission in all_submissions:
-                problem = submission["problem"]
-                problem_key = (
-                    f"{problem.get('contestId', '')}-{problem.get('index', '')}"
-                )
-                if problem_key not in submissions_by_problem:
-                    submissions_by_problem[problem_key] = {
-                        "name": problem.get("name", "N/A"),
-                        "tags": problem.get("tags", []),
-                        "submissions": [],
-                    }
-                submissions_by_problem[problem_key]["submissions"].append(submission)
-
-            if submissions_by_problem:
-                problem_history_data = [
-                    [
-                        "Problem Name",
-                        "Tags",
-                        "Submission Time",
-                        "Verdict",
-                        "Language",
-                        "Time (ms)",
-                        "Memory (KB)",
-                    ]
-                ]
-
-                def sort_key(item):
-                    contest_id_str = item[0].split("-")[0]
-                    problem_index = item[0].split("-")[1]
-                    contest_id = (
-                        int(contest_id_str)
-                        if contest_id_str.isdigit()
-                        else float("inf")
-                    )
-                    return (contest_id, problem_index)
-
-                sorted_problems = sorted(submissions_by_problem.items(), key=sort_key)
-
-                for _, problem_data in sorted_problems:
-                    tags_str = ", ".join(problem_data["tags"])
-                    sorted_submissions = sorted(
-                        problem_data["submissions"],
-                        key=lambda s: s["creationTimeSeconds"],
-                    )
-
-                    for sub in sorted_submissions:
-                        submission_time = datetime.fromtimestamp(
-                            sub.get("creationTimeSeconds", 0)
-                        ).strftime("%Y-%m-%d %H:%M:%S")
-                        problem_history_data.append(
-                            [
-                                problem_data["name"],
-                                tags_str,
-                                submission_time,
-                                sub.get("verdict", "N/A"),
-                                sub.get("programmingLanguage", "N/A"),
-                                sub.get("timeConsumedMillis", "N/A"),
-                                f"{sub.get('memoryConsumedBytes', 0) / 1024:.2f}",
-                            ]
-                        )
-                profile_data["Problem Submission History"] = problem_history_data
-
-        return {f"Codeforces - {k}": v for k, v in profile_data.items()}
+        print(f"Successfully generated exhaustive Codeforces profile for {self.handle}")
+        return aggregated_data
 
 
 class LeetCodeGenerator:
@@ -321,7 +266,7 @@ class LeetCodeGenerator:
             return {}
         print(f"Generating exhaustive LeetCode profile for {self.username}...")
 
-        profile_data = {}
+        aggregated_data = []
 
         query = """
         query getUserProfile($username: String!) {
@@ -344,8 +289,9 @@ class LeetCodeGenerator:
             user = data["matchedUser"]
 
             # User Summary
-            user_summary = [
-                ["Metric", "Value"],
+            aggregated_data.append(["--- User Summary ---"])
+            aggregated_data.append(["Metric", "Value"])
+            aggregated_data.extend([
                 ["Username", user.get("username", "N/A")],
                 ["Real Name", user.get("profile", {}).get("realName", "N/A")],
                 ["Global Ranking", user.get("profile", {}).get("ranking", "N/A")],
@@ -354,32 +300,36 @@ class LeetCodeGenerator:
                     user.get("contributions", {}).get("points", "N/A"),
                 ],
                 ["Generated On", datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
-            ]
-            profile_data["User Summary"] = user_summary
+            ])
+            aggregated_data.append([])
 
             # Problem Stats
-            problem_stats = [["Difficulty", "Solved", "Submissions"]]
+            aggregated_data.append(["--- Problem Stats ---"])
+            aggregated_data.append(["Difficulty", "Solved", "Submissions"])
             stats = user.get("submitStats", {}).get("acSubmissionNum", [])
             total_solved = sum(s["count"] for s in stats)
-            problem_stats.append(["Total Solved", total_solved, "N/A"])
+            aggregated_data.append(["Total Solved", total_solved, "N/A"])
             for s in stats:
-                problem_stats.append([s["difficulty"], s["count"], s["submissions"]])
-            profile_data["Problem Stats"] = problem_stats
+                aggregated_data.append([s["difficulty"], s["count"], s["submissions"]])
+            aggregated_data.append([])
 
             # Submission Calendar
-            submission_calendar_data = [["Metric", "Value"]]
+            aggregated_data.append(["--- Submission Calendar ---"])
+            aggregated_data.append(["Metric", "Value"])
             try:
                 calendar_data = json.loads(user.get("submissionCalendar", "{}"))
                 total_active_days = sum(
                     1 for count in calendar_data.values() if int(count) > 0
                 )
-                submission_calendar_data.append(
+                aggregated_data.append(
                     ["Total Active Days", total_active_days]
                 )
                 # Add more detailed calendar parsing here if needed
             except (json.JSONDecodeError, TypeError):
-                submission_calendar_data.append(["Calendar Data", "Not available."])
-        return {f"LeetCode - {k}": v for k, v in profile_data.items()}
+                aggregated_data.append(["Calendar Data", "Not available."])
+            aggregated_data.append([])
+
+        return aggregated_data
 
 
 class SteamStatsGenerator:
@@ -588,37 +538,33 @@ class ChessComGenerator:
             print("ERROR: Chess.com username not set.")
             return {}
 
-        profile_data = {}
+        aggregated_data = []
 
         # Player Profile
-        profile_summary_sheet = [["Metric", "Value"]]
-        profile_summary_sheet.append(
+        aggregated_data.append(["--- Player Profile ---"])
+        aggregated_data.append(["Metric", "Value"])
+        aggregated_data.append(
             ["Generated On", datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
         )
 
         player_profile_data = self._fetch_data(f"player/{self.username}")
         if player_profile_data:
-            profile_summary_sheet.append(
-                ["Username", player_profile_data.get("username", "N/A")]
-            )
-            profile_summary_sheet.append(
-                ["Name", player_profile_data.get("name", "N/A")]
-            )
-            profile_summary_sheet.append(
-                ["Country", player_profile_data.get("country", "N/A").split("/")[-1]]
-            )
-            profile_summary_sheet.append(
-                ["Followers", player_profile_data.get("followers", "N/A")]
-            )
+            aggregated_data.extend([
+                ["Username", player_profile_data.get("username", "N/A")],
+                ["Name", player_profile_data.get("name", "N/A")],
+                ["Country", player_profile_data.get("country", "N/A").split("/")[-1]],
+                ["Followers", player_profile_data.get("followers", "N/A")],
+            ])
             if "last_online" in player_profile_data:
                 last_online = datetime.fromtimestamp(
                     player_profile_data["last_online"]
                 ).strftime("%Y-%m-%d %H:%M:%S")
-                profile_summary_sheet.append(["Last Online", last_online])
-        profile_data["Player Profile"] = profile_summary_sheet
+                aggregated_data.append(["Last Online", last_online])
+        aggregated_data.append([])
 
         # Detailed Stats
-        stats_sheet = [
+        aggregated_data.append(["--- Detailed Stats ---"])
+        aggregated_data.append(
             [
                 "Category",
                 "Current Rating",
@@ -628,12 +574,12 @@ class ChessComGenerator:
                 "Losses",
                 "Draws",
             ]
-        ]
+        )
         stats_data = self._fetch_data(f"player/{self.username}/stats")
         if stats_data:
             for category, stats in stats_data.items():
                 if "last" in stats and "rating" in stats["last"]:
-                    stats_sheet.append(
+                    aggregated_data.append(
                         [
                             category.replace("chess_", "").replace("_", " ").title(),
                             stats["last"]["rating"],
@@ -650,8 +596,7 @@ class ChessComGenerator:
             if "tactics" in stats_data:
                 tactics_stats = stats_data["tactics"]
                 highest_tactics = tactics_stats.get("highest", {})
-                lowest_tactics = tactics_stats.get("lowest", {})
-                stats_sheet.append(
+                aggregated_data.append(
                     [
                         "Tactics",
                         "N/A",
@@ -671,7 +616,7 @@ class ChessComGenerator:
 
             if "puzzle_rush" in stats_data and "best" in stats_data["puzzle_rush"]:
                 puzzle_rush_stats = stats_data["puzzle_rush"]["best"]
-                stats_sheet.append(
+                aggregated_data.append(
                     [
                         "Puzzle Rush",
                         "N/A",
@@ -682,23 +627,24 @@ class ChessComGenerator:
                         "N/A",
                     ]
                 )
-        profile_data["Detailed Stats"] = stats_sheet
+        aggregated_data.append([])
 
         # Clubs
-        clubs_sheet = [["Club Name"]]
+        aggregated_data.append(["--- Clubs ---"])
+        aggregated_data.append(["Club Name"])
         clubs_data = self._fetch_data(f"player/{self.username}/clubs")
         if clubs_data and clubs_data.get("clubs"):
             for club in clubs_data["clubs"]:
-                clubs_sheet.append([club.get("name", "N/A")])
+                aggregated_data.append([club.get("name", "N/A")])
         else:
-            clubs_sheet.append(["No clubs found."])
-        profile_data["Clubs"] = clubs_sheet
+            aggregated_data.append(["No clubs found."])
+        aggregated_data.append([])
 
         # Recent Games from Archives
         archives_data = self._fetch_data(f"player/{self.username}/games/archives")
         if archives_data and archives_data.get("archives"):
-            rapid_games_sheet = [["PGN"]]
-            blitz_games_sheet = [["PGN"]]
+            aggregated_data.append(["--- Rapid Games (Last 100) ---"])
+            aggregated_data.append(["PGN"])
             rapid_games = []
             blitz_games = []
             for archive_url in reversed(archives_data["archives"]):
@@ -716,12 +662,14 @@ class ChessComGenerator:
                             blitz_games.append(game.get("pgn", "PGN not available"))
 
             for pgn in rapid_games:
-                rapid_games_sheet.append([pgn])
-            profile_data["Rapid Games"] = rapid_games_sheet
+                aggregated_data.append([pgn])
+            aggregated_data.append([])
 
+            aggregated_data.append(["--- Blitz Games (Last 100) ---"])
+            aggregated_data.append(["PGN"])
             for pgn in blitz_games:
-                blitz_games_sheet.append([pgn])
-            profile_data["Blitz Games"] = blitz_games_sheet
+                aggregated_data.append([pgn])
+            aggregated_data.append([])
 
         print(f"Successfully generated Chess.com profile for {self.username}")
-        return {f"Chess.com - {k}": v for k, v in profile_data.items()}
+        return aggregated_data

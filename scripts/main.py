@@ -31,14 +31,14 @@ def _generate_profile(generator_class, output_file):
     return False
 
 
-def _sync_profile(sync_function, platform_name, json_file):
+def _sync_profile(sync_function, json_file):
     """Syncs a single profile from a JSON file."""
     if not os.path.exists(json_file):
         print(f"[ERROR] JSON file not found: {json_file}")
         return False
     with open(json_file, "r", encoding="utf-8") as f:
         content_to_sync = json.load(f)
-    return sync_function(content_to_sync.get(platform_name, {}))
+    return sync_function(content_to_sync)
 
 
 def main():
@@ -66,19 +66,19 @@ def main():
             ChessComGenerator, os.path.join(TEMP_DIR, "chesscom_profile.json")
         ),
         "sync-codeforces": lambda: _sync_profile(
-            cloud_syncer.sync_codeforces_to_gsheet, "Codeforces",
+            cloud_syncer.sync_codeforces_to_gsheet,
             os.path.join(TEMP_DIR, "codeforces_profile.json"),
         ),
         "sync-leetcode": lambda: _sync_profile(
-            cloud_syncer.sync_leetcode_to_gsheet, "LeetCode",
+            cloud_syncer.sync_leetcode_to_gsheet,
             os.path.join(TEMP_DIR, "leetcode_profile.json"),
         ),
         "sync-steam": lambda: _sync_profile(
-            cloud_syncer.sync_steam_to_gsheet, "Steam",
+            cloud_syncer.sync_steam_to_gsheet,
             os.path.join(TEMP_DIR, "steam_profile.json"),
         ),
         "sync-chesscom": lambda: _sync_profile(
-            cloud_syncer.sync_chesscom_to_gsheet, "Chess.com",
+            cloud_syncer.sync_chesscom_to_gsheet,
             os.path.join(TEMP_DIR, "chesscom_profile.json"),
         ),
     }
