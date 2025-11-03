@@ -8,7 +8,7 @@ import string
 import time
 from collections import Counter
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 
 import requests
 from config import (CF_API_KEY, CF_API_SECRET, CF_HANDLE,
@@ -202,7 +202,7 @@ class CodeforcesGenerator:
             )
         aggregated_data.append([])
 
-    def generate(self):
+    def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
         """Fetches and generates the Codeforces profile as structured data."""
         if not self.handle:
             print(
@@ -232,7 +232,7 @@ class LeetCodeGenerator:
         This is a placeholder method to satisfy the pylint warning R0903.
         """
 
-    def generate(self):
+    def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
         """
         This is a placeholder method to satisfy the pylint warning R0903.
         """
@@ -252,7 +252,7 @@ class SteamStatsGenerator:
         This is a placeholder method to satisfy the pylint warning R0903.
         """
 
-    def generate(self):
+    def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
         """
         This is a placeholder method to satisfy the pylint warning R0903.
         """
@@ -416,7 +416,7 @@ class ChessComGenerator:
             aggregated_data.append([pgn])
         aggregated_data.append([])
 
-    def generate(self) -> Dict[str, Any]:
+    def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
         """Fetches and generates the Chess.com profile as structured data."""
         print(f"Generating Chess.com profile for {self.username}...")
         if not self.username:
