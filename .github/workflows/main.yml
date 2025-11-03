@@ -39,9 +39,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
     - name: Run Codeforces Generation
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh generate-codeforces
+      run: python scripts/main.py generate-codeforces
       env:
         CODEFORCES_ID: ${{ secrets.CODEFORCES_ID }}
     - name: Upload Codeforces profile artifact
@@ -62,9 +60,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
     - name: Run LeetCode Generation
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh generate-leetcode
+      run: python scripts/main.py generate-leetcode
       env:
         LEETCODE_ID: ${{ secrets.LEETCODE_ID }}
     - name: Upload LeetCode profile artifact
@@ -85,9 +81,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
     - name: Run Steam Generation
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh generate-steam
+      run: python scripts/main.py generate-steam
       env:
         STEAM_ID: ${{ secrets.STEAM_ID }}
         STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
@@ -109,9 +103,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
     - name: Run Chess.com Generation
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh generate-chesscom
+      run: python scripts/main.py generate-chesscom
       env:
         CHESSCOM_ID: ${{ secrets.CHESSCOM_ID }}
     - name: Upload Chess.com profile artifact
@@ -147,9 +139,7 @@ jobs:
         name: codeforces-profile
         path: Temp
     - name: Run Codeforces Sync
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh sync-codeforces
+      run: python scripts/main.py sync-codeforces
       env:
         GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
 
@@ -180,9 +170,7 @@ jobs:
         name: leetcode-profile
         path: Temp
     - name: Run LeetCode Sync
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh sync-leetcode
+      run: python scripts/main.py sync-leetcode
       env:
         GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
 
@@ -213,9 +201,7 @@ jobs:
         name: steam-profile
         path: Temp
     - name: Run Steam Sync
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh sync-steam
+      run: python scripts/main.py sync-steam
       env:
         GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
 
@@ -246,9 +232,7 @@ jobs:
         name: chesscom-profile
         path: Temp
     - name: Run Chess.com Sync
-      run: |
-        chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh sync-chesscom
+      run: python scripts/main.py sync-chesscom
       env:
         GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
 
