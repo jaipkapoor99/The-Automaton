@@ -405,33 +405,34 @@ class SteamStatsGenerator:
             return {}
         print(f"Generating Steam profile for Steam ID: {self.steam_id}...")
 
-        profile_data = {}
+        aggregated_data = []
 
         # Profile Summary
-        summary_sheet = [["Metric", "Value"]]
-        summary_sheet.append(
+        aggregated_data.append(["--- Profile Summary ---"])
+        aggregated_data.append(["Metric", "Value"])
+        aggregated_data.append(
             ["Generated On", datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
         )
 
         player_summary = self._get_player_summaries()
         if player_summary and player_summary.get("response", {}).get("players"):
             player = player_summary["response"]["players"][0]
-            summary_sheet.append(["Username", player.get("personaname", "N/A")])
+            aggregated_data.append(["Username", player.get("personaname", "N/A")])
         else:
-            summary_sheet.append(["Username", "Could not fetch."])
+            aggregated_data.append(["Username", "Could not fetch."])
 
         level_data = self._get_player_level()
         if level_data and level_data.get("response"):
-            summary_sheet.append(
+            aggregated_data.append(
                 ["Steam Level", level_data["response"].get("player_level", "N/A")]
             )
 
         badges_data = self._get_player_badges()
         if badges_data and badges_data.get("response"):
-            summary_sheet.append(
+            aggregated_data.append(
                 ["Total Badges", len(badges_data["response"].get("badges", []))]
             )
-            summary_sheet.append(
+            aggregated_data.append(
                 ["Total XP", badges_data["response"].get("player_xp", "N/A")]
             )
 
@@ -440,23 +441,24 @@ class SteamStatsGenerator:
             completed_quests = sum(
                 1 for q in badge_progress["response"]["quests"] if q.get("completed")
             )
-            summary_sheet.append(
+            aggregated_data.append(
                 [
                     "Community Quests Completed",
                     f"{completed_quests}/{len(badge_progress['response']['quests'])}",
                 ]
             )
-        profile_data["Profile Summary"] = summary_sheet
+        aggregated_data.append([])
 
         # Game Library Analysis
-        game_library_sheet = [
+        aggregated_data.append(["--- Game Library ---"])
+        aggregated_data.append(
             [
                 "Game Name",
                 "Playtime (hours)",
                 "Achievements (Achieved/Total)",
                 "Custom Stats",
             ]
-        ]
+        )
         owned_games = self._get_owned_games()
         if owned_games and owned_games.get("response", {}).get("games"):
             games = sorted(
@@ -498,7 +500,7 @@ class SteamStatsGenerator:
                         ]
                     )
 
-                game_library_sheet.append(
+                aggregated_data.append(
                     [
                         game.get("name", "Unknown Game"),
                         f"{playtime_hours:.2f}",
@@ -507,10 +509,11 @@ class SteamStatsGenerator:
                     ]
                 )
         else:
-            game_library_sheet.append(
+            aggregated_data.append(
                 ["Could not retrieve game library. Profile may be private.", "", "", ""]
             )
-        return {f"Steam - {k}": v for k, v in profile_data.items()}
+        
+        return aggregated_data
 
 
 class ChessComGenerator:
