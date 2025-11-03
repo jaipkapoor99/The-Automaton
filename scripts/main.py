@@ -5,7 +5,7 @@ Main entry point for The-Mind Repository Automation Workflow.
 import json
 import os
 import sys
-from typing import Any, Callable, Dict, Type, Union
+from typing import Any, Callable, Dict, List, Type, Union
 
 from config import TEMP_DIR
 from modules.cloud_sync import CloudSyncer
@@ -23,7 +23,7 @@ def _generate_profile(
     output_file: str,
 ) -> bool:
     """Generates a single profile and saves it to a file."""
-    profile_data = generator_class().generate()
+    profile_data: Union[Dict[str, Any], List[List[Any]]] = generator_class().generate()
     if profile_data:
         os.makedirs(TEMP_DIR, exist_ok=True)
         with open(output_file, "w", encoding="utf-8") as f:
@@ -33,7 +33,7 @@ def _generate_profile(
 
 
 def _sync_profile(
-    sync_function: Callable[[Dict[str, Any]], bool], json_file: str
+    sync_function: Callable[[List[List[Any]]], bool], json_file: str
 ) -> bool:
     """Syncs a single profile from a JSON file."""
     if not os.path.exists(json_file):
