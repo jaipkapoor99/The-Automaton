@@ -2,25 +2,26 @@
 """
 Main entry point for The-Mind Repository Automation Workflow.
 """
+import json
 import os
 import sys
+from typing import Callable, Type, Union
 
-# Ensure the script can find the modules directory
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-import json
-
-from scripts.config import TEMP_DIR
-from scripts.modules.cloud_sync import CloudSyncer
-from scripts.modules.profile_generator import (
-    ChessComGenerator,
-    CodeforcesGenerator,
-    LeetCodeGenerator,
-    SteamStatsGenerator,
-)
+from config import TEMP_DIR
+from modules.cloud_sync import CloudSyncer
+from modules.profile_generator import (ChessComGenerator, CodeforcesGenerator,
+                                       LeetCodeGenerator, SteamStatsGenerator)
 
 
-def _generate_profile(generator_class, output_file):
+def _generate_profile(
+    generator_class: Union[
+        Type[CodeforcesGenerator],
+        Type[LeetCodeGenerator],
+        Type[SteamStatsGenerator],
+        Type[ChessComGenerator],
+    ],
+    output_file: str,
+):
     """Generates a single profile and saves it to a file."""
     profile_data = generator_class().generate()
     if profile_data:
@@ -31,7 +32,7 @@ def _generate_profile(generator_class, output_file):
     return False
 
 
-def _sync_profile(sync_function, json_file):
+def _sync_profile(sync_function: Callable, json_file: str):
     """Syncs a single profile from a JSON file."""
     if not os.path.exists(json_file):
         print(f"[ERROR] JSON file not found: {json_file}")
