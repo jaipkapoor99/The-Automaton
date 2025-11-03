@@ -5,7 +5,7 @@ Main entry point for The-Mind Repository Automation Workflow.
 import json
 import os
 import sys
-from typing import Callable, Type, Union
+from typing import Any, Callable, Dict, Type, Union
 
 from config import TEMP_DIR
 from modules.cloud_sync import CloudSyncer
@@ -21,7 +21,7 @@ def _generate_profile(
         Type[ChessComGenerator],
     ],
     output_file: str,
-):
+) -> bool:
     """Generates a single profile and saves it to a file."""
     profile_data = generator_class().generate()
     if profile_data:
@@ -32,7 +32,9 @@ def _generate_profile(
     return False
 
 
-def _sync_profile(sync_function: Callable, json_file: str):
+def _sync_profile(
+    sync_function: Callable[[Dict[str, Any]], bool], json_file: str
+) -> bool:
     """Syncs a single profile from a JSON file."""
     if not os.path.exists(json_file):
         print(f"[ERROR] JSON file not found: {json_file}")
@@ -53,7 +55,7 @@ def main():
 
     cloud_syncer = CloudSyncer()
 
-    workflows = {
+    workflows: Dict[str, Callable[[], bool]] = {
         "generate-codeforces": lambda: _generate_profile(
             CodeforcesGenerator, os.path.join(TEMP_DIR, "codeforces_profile.json")
         ),
