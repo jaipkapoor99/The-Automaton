@@ -286,8 +286,7 @@ class CodeforcesGenerator:
                         )
                 profile_data["Problem Submission History"] = problem_history_data
 
-        print(f"Successfully generated exhaustive Codeforces profile for {self.handle}")
-        return profile_data
+        return {f"Codeforces - {k}": v for k, v in profile_data.items()}
 
 
 class LeetCodeGenerator:
@@ -380,9 +379,7 @@ class LeetCodeGenerator:
                 # Add more detailed calendar parsing here if needed
             except (json.JSONDecodeError, TypeError):
                 submission_calendar_data.append(["Calendar Data", "Not available."])
-            profile_data["Submission Calendar"] = submission_calendar_data
-
-        return profile_data
+        return {f"LeetCode - {k}": v for k, v in profile_data.items()}
 
 
 class SteamStatsGenerator:
@@ -563,9 +560,7 @@ class SteamStatsGenerator:
             game_library_sheet.append(
                 ["Could not retrieve game library. Profile may be private.", "", "", ""]
             )
-        profile_data["Game Library"] = game_library_sheet
-
-        return profile_data
+        return {f"Steam - {k}": v for k, v in profile_data.items()}
 
 
 class ChessComGenerator:
@@ -729,4 +724,4 @@ class ChessComGenerator:
             profile_data["Blitz Games"] = blitz_games_sheet
 
         print(f"Successfully generated Chess.com profile for {self.username}")
-        return profile_data
+        return {f"Chess.com - {k}": v for k, v in profile_data.items()}
