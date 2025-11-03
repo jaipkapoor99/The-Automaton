@@ -134,17 +134,73 @@ class CloudSyncer:
                 return False
         return False  # All retries failed
 
-    def sync_all_profiles_to_gsheet(self, profiles_content_dict):
+    def sync_codeforces_to_gsheet(self, content_dict):
+        """Syncs the Codeforces profile to its Google Sheet."""
+        from scripts.config import GOOGLE_SHEET_ID
+        print_section_header("Sync Codeforces Profile to Google Sheet")
+        return self._sync_any_content_to_gsheet(
+            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+        )
+
+    def sync_leetcode_to_gsheet(self, content_dict):
+        """Syncs the LeetCode profile to its Google Sheet."""
+        from scripts.config import GOOGLE_SHEET_ID
+        print_section_header("Sync LeetCode Profile to Google Sheet")
+        return self._sync_any_content_to_gsheet(
+            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+        )
+
+    def sync_steam_to_gsheet(self, content_dict):
+        """Syncs the Steam stats to its Google Sheet."""
+        from scripts.config import GOOGLE_SHEET_ID
+        print_section_header("Sync Steam Stats to Google Sheet")
+        return self._sync_any_content_to_gsheet(
+            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+        )
+
+    def sync_youtube_to_gsheet(self, content_dict):
+        """Syncs the YouTube stats to its Google Sheet."""
+        from scripts.config import GOOGLE_SHEET_ID
+        print_section_header("Sync YouTube Stats to Google Sheet")
+        return self._sync_any_content_to_gsheet(
+            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+        )
+
+    def sync_chesscom_to_gsheet(self, content_dict):
+        """Syncs the Chess.com profile to its Google Sheet."""
+        from scripts.config import GOOGLE_SHEET_ID
+        print_section_header("Sync Chess.com Profile to Google Sheet")
+        return self._sync_any_content_to_gsheet(
+            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+        )
+
+    def sync_all_profiles_to_gsheets(self, profiles_content_dict):
         """Syncs all supported shared files to their respective Google Sheets."""
         print_section_header("Sync All Shared Files to Google Sheets")
-
-        # Import GOOGLE_SHEET_ID here to avoid circular import issues at the top level
-        from scripts.config import GOOGLE_SHEET_ID
-
+        
         all_successful = True
-        if not self._sync_any_content_to_gsheet(
-            profiles_content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
-        ):
-            all_successful = False
+        
+        # A dictionary mapping profile type to its sync function
+        sync_functions = {
+            "codeforces": self.sync_codeforces_to_gsheet,
+            "leetcode": self.sync_leetcode_to_gsheet,
+            "steam": self.sync_steam_to_gsheet,
+            "youtube": self.sync_youtube_to_gsheet,
+            "chesscom": self.sync_chesscom_to_gsheet,
+        }
 
+        for profile_type, sync_func in sync_functions.items():
+            content_dict = profiles_content_dict.get(profile_type)
+            if content_dict is None:
+                print(f"WARNING: No content provided for {profile_type}. Skipping sync.")
+                continue
+
+            try:
+                if not sync_func(content_dict):
+                    all_successful = False
+                    print(f"Sync failed for: {profile_type}")
+            except Exception as e:
+                all_successful = False
+                print(f"An unexpected error occurred during sync for {profile_type}: {e}")
+        
         return all_successful

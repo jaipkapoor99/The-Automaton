@@ -147,19 +147,17 @@ invoke_git_operations() {
 show_help() {
     # Using a "here document" to print a block of text.
     cat << EOF
-The-Automaton Repository Workflow Script
-========================================
-
-USAGE: ./scripts/workflow.sh [Action]
-
-ACTIONS:
-  generate-all                  Generate all profiles into a single JSON file.
   sync-all                      Sync all profiles from the JSON file to Google Sheets.
   generate-codeforces           Generate Codeforces profile.
+  sync-codeforces               Sync Codeforces profile to Google Sheets.
   generate-leetcode             Generate LeetCode profile.
+  sync-leetcode                 Sync LeetCode profile to Google Sheets.
   generate-steam                Generate Steam profile.
+  sync-steam                    Sync Steam profile to Google Sheets.
   generate-youtube              Generate YouTube profile.
+  sync-youtube                  Sync YouTube profile to Google Sheets.
   generate-chesscom             Generate Chess.com profile.
+  sync-chesscom                 Sync Chess.com profile to Google Sheets.
   help                          Show this help message.
   
 OPTIONS:
@@ -169,7 +167,7 @@ EOF
 
 # --- Main Logic ---
 
-# Handle 'help' action first, as it doesn\'t need logging.
+# Handle 'help' action first, as it doesn't need logging.
 if [[ "$ACTION" == "help" ]]; then
     show_help
     exit 0
@@ -192,17 +190,32 @@ case "$ACTION" in
     generate-codeforces)
         invoke_python_function "generate-codeforces" "Generating Codeforces profile"
         ;;
+    sync-codeforces)
+        invoke_python_function "sync-codeforces" "Syncing Codeforces profile"
+        ;;
     generate-leetcode)
         invoke_python_function "generate-leetcode" "Generating LeetCode profile"
+        ;;
+    sync-leetcode)
+        invoke_python_function "sync-leetcode" "Syncing LeetCode profile"
         ;;
     generate-steam)
         invoke_python_function "generate-steam" "Generating Steam profile"
         ;;
+    sync-steam)
+        invoke_python_function "sync-steam" "Syncing Steam profile"
+        ;;
     generate-youtube)
         invoke_python_function "generate-youtube" "Generating YouTube profile"
         ;;
+    sync-youtube)
+        invoke_python_function "sync-youtube" "Syncing YouTube profile"
+        ;;
     generate-chesscom)
         invoke_python_function "generate-chesscom" "Generating Chess.com profile"
+        ;;
+    sync-chesscom)
+        invoke_python_function "sync-chesscom" "Syncing Chess.com profile"
         ;;
     *)
         # This will trigger the error trap
