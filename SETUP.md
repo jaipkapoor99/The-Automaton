@@ -25,16 +25,16 @@ Automaton.
 
 1. **Clone the repository:**
 
-    ```bash
-    git clone https://github.com/jaipkapoor99/The-Automaton.git
-    cd The-Automaton
-    ```
+   ```bash
+   git clone https://github.com/jaipkapoor99/The-Automaton.git
+   cd The-Automaton
+   ```
 
 2. **Install Python dependencies:**
 
-    ```bash
-    pip install -r scripts/requirements.txt
-    ```
+   ```bash
+   pip install -r scripts/requirements.txt
+   ```
 
 ## Configuration
 
@@ -54,25 +54,26 @@ This file will store all your sensitive data, such as API keys and user IDs.
 To sync with Google services, you'll need to set up OAuth 2.0 credentials.
 
 1. **Go to the Google Cloud Console**:
-    Navigate to the [APIs & Services
-    dashboard](https://console.cloud.google.com/apis/dashboard).
+   Navigate to the [APIs & Services
+   dashboard](https://console.cloud.google.com/apis/dashboard).
 
 2. **Create a new project**:
-    If you don't have one already, create a new project.
+   If you don't have one already, create a new project.
 
 3. **Enable APIs**:
-    Enable the **Google Drive API** and the **Google Docs API**.
+   Enable the **Google Drive API** and the **Google Sheets API**.
 
 4. **Create OAuth credentials**:
+
    - Go to the [Credentials
-       page](https://console.cloud.google.com/apis/credentials).
+     page](https://console.cloud.google.com/apis/credentials).
    - Click **Create Credentials** and select **OAuth client ID**.
    - Choose **Desktop app** as the application type.
    - Download the JSON file.
 
 5. **Set environment variables**:
-    Open your `.env` file and fill in the following variables using the
-    information from your downloaded JSON file:
+   Open your `.env` file and fill in the following variables using the
+   information from your downloaded JSON file:
    - `GOOGLE_PROJECT_ID`
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
@@ -83,8 +84,7 @@ To sync with Google services, you'll need to set up OAuth 2.0 credentials.
 
 ### 3. Authorizing the Application
 
-The first time you run a workflow that requires Google authentication (such as
-`sync-gdrive`), the application will automatically open a browser window.
+The first time you run the `sync-all` workflow that requires Google authentication, the application will automatically open a browser window.
 Follow the prompts in the browser to log in with your Google account and grant
 the necessary permissions.
 
@@ -96,7 +96,7 @@ you revoke the application's access or delete the `token.json` file.
 ### 4. API Keys and User IDs
 
 Fill in the remaining variables in your `.env` file with your personal API
-keys and user IDs for the services you want to use.
+keys, user IDs, and the `GOOGLE_SHEET_ID` for the master spreadsheet.
 
 ### 5. YAML Configuration
 
@@ -111,12 +111,18 @@ directory.
 
 - **To see a list of all available actions**:
 
-    ```bash
-    ./scripts/workflow.sh -Action help
-    ```
+  ```bash
+  ./scripts/workflow.sh -Action help
+  ```
 
-- **To run a specific action**:
+- **To generate all profiles**:
 
-    ```bash
-    ./scripts/workflow.sh -Action <action_name>
-    ```
+  ```bash
+  ./scripts/workflow.sh -Action generate-all
+  ```
+
+- **To sync all profiles to Google Sheets**:
+
+  ```bash
+  ./scripts/workflow.sh -Action sync-all
+  ```

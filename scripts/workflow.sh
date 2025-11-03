@@ -150,33 +150,14 @@ show_help() {
 The-Automaton Repository Workflow Script
 ========================================
 
-USAGE: ./scripts/workflow.sh [Action] [Options]
+USAGE: ./scripts/workflow.sh [Action]
 
 ACTIONS:
-  full                          Run complete workflow
-  full-without-git              Run workflow without Git operations (default)
-  chess-com                     Generate Chess.com profile
-  codeforces                    Generate Codeforces profile
-  leetcode                      Generate LeetCode profile
-  steam-stats                   Fetch Steam gaming stats
-  youtube                       Generate YouTube profile
-  
-  codeforces-generate           Generate Codeforces profile
-  codeforces-sync               Sync Codeforces profile to Google Docs
-  leetcode-generate             Generate LeetCode profile
-  leetcode-sync                 Sync LeetCode profile to Google Docs
-  steam-generate                Generate Steam stats
-  steam-sync                    Sync Steam stats to Google Docs
-  youtube-generate              Generate YouTube profile
-  youtube-sync                  Sync YouTube profile to Google Docs
-  chesscom-generate             Generate Chess.com profile
-  chesscom-sync                 Sync Chess.com profile to Google Docs
-  
-  help                          Show this help
+  generate-all                  Generate all profiles into a single JSON file.
+  sync-all                      Sync all profiles from the JSON file to Google Sheets.
+  help                          Show this help message.
   
 OPTIONS:
-  
-  -DocId <id>                   Specify Google Doc ID for a sync-gdoc action
   -h, --help                    Show this help message
 EOF
 }
@@ -197,66 +178,11 @@ echo "Action: $ACTION"
 
 # Main control flow based on the action
 case "$ACTION" in
-    chess-com)
-        invoke_python_function "chess-com" "Generating Chess.com profile and syncing to Google Docs"
+    generate-all)
+        invoke_python_function "generate-all" "Generating all profiles"
         ;;
-    codeforces)
-        invoke_python_function "codeforces" "Generating Codeforces profile and syncing to Google Docs"
-        ;;
-    leetcode)
-        invoke_python_function "leetcode" "Generating LeetCode profile and syncing to Google Docs"
-        ;;
-    steam-stats)
-        invoke_python_function "steam-stats" "Generating Steam stats and syncing to Google Docs"
-        ;;
-    youtube)
-        invoke_python_function "youtube" "Generating YouTube profile and syncing to Google Docs"
-        ;;
-    codeforces-generate)
-        invoke_python_function "codeforces-generate" "Generating Codeforces profile"
-        ;;
-    codeforces-sync)
-        invoke_python_function "codeforces-sync" "Syncing Codeforces profile to Google Docs"
-        ;;
-    leetcode-generate)
-        invoke_python_function "leetcode-generate" "Generating LeetCode profile"
-        ;;
-    leetcode-sync)
-        invoke_python_function "leetcode-sync" "Syncing LeetCode profile to Google Docs"
-        ;;
-    steam-generate)
-        invoke_python_function "steam-generate" "Generating Steam stats"
-        ;;
-    steam-sync)
-        invoke_python_function "steam-sync" "Syncing Steam stats to Google Docs"
-        ;;
-    youtube-generate)
-        invoke_python_function "youtube-generate" "Generating YouTube profile"
-        ;;
-    youtube-sync)
-        invoke_python_function "youtube-sync" "Syncing YouTube profile to Google Docs"
-        ;;
-    chesscom-generate)
-        invoke_python_function "chesscom-generate" "Generating Chess.com profile"
-        ;;
-    chesscom-sync)
-        invoke_python_function "chesscom-sync" "Syncing Chess.com profile to Google Docs"
-        ;;
-    full-without-git)
-        write_step_header "Generating and Syncing All Profiles" 1
-        invoke_python_function "codeforces" "Codeforces profile"
-        invoke_python_function "leetcode" "LeetCode profile"
-        invoke_python_function "steam-stats" "Steam stats"
-        invoke_python_function "youtube" "YouTube profile"
-        invoke_python_function "chess-com" "Chess.com profile"
-        ;;
-    full)
-        write_step_header "Generating and Syncing All Profiles" 1
-        invoke_python_function "codeforces" "Codeforces profile"
-        invoke_python_function "leetcode" "LeetCode profile"
-        invoke_python_function "steam-stats" "Steam stats"
-        invoke_python_function "youtube" "YouTube profile"
-        invoke_python_function "chess-com" "Chess.com profile"
+    sync-all)
+        invoke_python_function "sync-all" "Syncing all profiles to Google Sheets"
         ;;
     *)
         # This will trigger the error trap

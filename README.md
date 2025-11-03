@@ -7,15 +7,14 @@ online platforms.
 ## Features
 
 - **Modular Architecture**: Easily extend the framework by adding new modules
-    for different services.
+  for different services.
 - **Profile Generation**: Automatically generate detailed profiles from
-    services like Codeforces, LeetCode, Chess.com, Steam, and YouTube.
-- **Cloud Sync**: Synchronize your data to Google Docs and a configurable
-    local directory.
+  services like Codeforces, LeetCode, Chess.com, Steam, and YouTube.
+- **Cloud Sync**: Synchronize your data to a single Google Sheet (with separate subsheets for each platform's data) and a configurable local directory.
 - **Command-Line Interface**: A simple and intuitive CLI for running
-    workflows via a PowerShell script.
+  workflows via a PowerShell script.
 - **Customizable**: Configure the tool to your needs using a central
-    `config.yaml` and a `.env` file for sensitive data.
+  `config.yaml` and a `.env` file for sensitive data.
 
 ## Setup
 
