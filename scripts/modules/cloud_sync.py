@@ -5,14 +5,11 @@ to local directories and Google Drive.
 """
 import socket
 import time
+from typing import Any, List
 
-from scripts.config import (
-    print_section_header,
-)
-from scripts.modules.google_auth import GOOGLE_LIBS_AVAILABLE, GoogleAuthenticator
-
-if GOOGLE_LIBS_AVAILABLE:
-    from googleapiclient.errors import HttpError
+from config import GOOGLE_SHEET_ID, print_section_header
+from googleapiclient.errors import HttpError
+from modules.google_auth import GoogleAuthenticator
 
 
 class CloudSyncer:
@@ -24,7 +21,28 @@ class CloudSyncer:
         except ImportError:
             self.authenticator = None
 
-    def _sync_any_content_to_gsheet(
+    def _create_and_clear_sheet(self, sheets_service, sheet_id, sheet_name):
+        """Creates a new sheet if it doesn't exist and clears its content."""
+        spreadsheet_metadata = (
+            sheets_service.spreadsheets()
+            .get(spreadsheetId=sheet_id)
+            .execute()  # pylint: disable=no-member
+        )
+        existing_sheets = {
+            s["properties"]["title"]: s["properties"]["sheetId"]
+            for s in spreadsheet_metadata.get("sheets", [])
+        }
+        if sheet_name not in existing_sheets:
+            requests = [{"addSheet": {"properties": {"title": sheet_name}}}]
+            sheets_service.spreadsheets().batchUpdate(
+                spreadsheetId=sheet_id, body={"requests": requests}
+            ).execute()
+        clear_range = f"'{sheet_name}'!A:Z"
+        sheets_service.spreadsheets().values().clear(
+            spreadsheetId=sheet_id, range=clear_range, body={}
+        ).execute()
+
+    def _sync_any_content_to_gsheet(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         sheet_name,
         data,
@@ -34,9 +52,7 @@ class CloudSyncer:
         initial_delay=1,
     ):
         """
-        Generic function to sync a dictionary of content (sheet_name -> list of lists) to a specific Google Sheet.
-        This function will create new sheets (tabs) within the spreadsheet and overwrite their content.
-        Includes retry logic with exponential backoff.
+        Generic function to sync a dictionary of content to a specific Google Sheet.
         """
         if not self.authenticator:
             print("ERROR: Google Authenticator not available.")
@@ -47,53 +63,18 @@ class CloudSyncer:
             )
             return False
 
+        success = False
         for attempt in range(max_retries):
             try:
                 sheets_service = self.authenticator.get_service("sheets", "v4")
                 if not sheets_service:
-                    return False
+                    break
 
-                # Get existing sheets to check if we need to create new ones
-                spreadsheet_metadata = (
-                    sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()
-                )
-                existing_sheets = {
-                    s["properties"]["title"]: s["properties"]["sheetId"]
-                    for s in spreadsheet_metadata.get("sheets", [])
-                }
+                self._create_and_clear_sheet(sheets_service, sheet_id, sheet_name)
 
-                requests = []
-                if sheet_name not in existing_sheets:
-                    # Add request to create new sheet
-                    requests.append(
-                        {"addSheet": {"properties": {"title": sheet_name}}}
-                    )
-
-                if requests:
-                    sheets_service.spreadsheets().batchUpdate(
-                        spreadsheetId=sheet_id, body={"requests": requests}
-                    ).execute()
-                    # Re-fetch metadata to get new sheet IDs
-                    spreadsheet_metadata = (
-                        sheets_service.spreadsheets()
-                        .get(spreadsheetId=sheet_id)
-                        .execute()
-                    )
-                    existing_sheets = {
-                        s["properties"]["title"]: s["properties"]["sheetId"]
-                        for s in spreadsheet_metadata.get("sheets", [])
-                    }
-
-                # Clear existing content in the sheet
-                clear_range = f"'{sheet_name}'!A:Z"  # Clear a wide range
-                sheets_service.spreadsheets().values().clear(
-                    spreadsheetId=sheet_id, range=clear_range, body={}
-                ).execute()
-
-                # Write new content
                 if data:
                     body = {"values": data}
-                    sheets_service.spreadsheets().values().update(
+                    sheets_service.spreadsheets().values().update(  # pylint: disable=no-member
                         spreadsheetId=sheet_id,
                         range=f"'{sheet_name}'!A1",
                         valueInputOption="RAW",
@@ -105,7 +86,8 @@ class CloudSyncer:
                     )
 
                 print(f"Successfully synced content to Google Sheet ID: {sheet_id}.")
-                return True
+                success = True
+                break
             except (HttpError, socket.timeout) as err:
                 if (
                     isinstance(err, HttpError)
@@ -125,41 +107,37 @@ class CloudSyncer:
                     print(
                         f"A Google API error occurred after {attempt + 1} attempts: {err}"
                     )
-                    return False
-            except Exception as e:
+                    break
+            except (IOError, OSError) as e:
                 print(
                     f"An unexpected error occurred during Google Sheet sync after {attempt + 1} attempts: {e}"
                 )
-                return False
-        return False  # All retries failed
+                break
+        return success
 
-    def sync_codeforces_to_gsheet(self, content_dict):
+    def sync_codeforces_to_gsheet(self, content_dict: List[List[Any]]):
         """Syncs the Codeforces profile to its Google Sheet."""
-        from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync Codeforces Profile to Google Sheet")
         return self._sync_any_content_to_gsheet(
             "Codeforces", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
         )
 
-    def sync_leetcode_to_gsheet(self, content_dict):
+    def sync_leetcode_to_gsheet(self, content_dict: List[List[Any]]):
         """Syncs the LeetCode profile to its Google Sheet."""
-        from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync LeetCode Profile to Google Sheet")
         return self._sync_any_content_to_gsheet(
             "LeetCode", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
         )
 
-    def sync_steam_to_gsheet(self, content_dict):
+    def sync_steam_to_gsheet(self, content_dict: List[List[Any]]):
         """Syncs the Steam stats to its Google Sheet."""
-        from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync Steam Stats to Google Sheet")
         return self._sync_any_content_to_gsheet(
             "Steam", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
         )
 
-    def sync_chesscom_to_gsheet(self, content_dict):
+    def sync_chesscom_to_gsheet(self, content_dict: List[List[Any]]):
         """Syncs the Chess.com profile to its Google Sheet."""
-        from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync Chess.com Profile to Google Sheet")
         return self._sync_any_content_to_gsheet(
             "Chess.com", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
