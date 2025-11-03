@@ -27,7 +27,7 @@ class GoogleAuthenticator:
     def __init__(self):
         if not GOOGLE_LIBS_AVAILABLE:
             raise ImportError("Google client libraries not installed.")
-        self.creds = self._authenticate_service_account()
+        self.creds = None
 
     def _authenticate_service_account(self):
         """Authenticates using a service account and returns credentials."""
@@ -87,6 +87,9 @@ class GoogleAuthenticator:
 
     def get_service(self, service_name, version):
         """Builds and returns an authorized API service object using service account credentials."""
+        if not self.creds:
+            self.creds = self._authenticate_service_account()
+
         if not self.creds:
             print("Service account authentication failed. Cannot create service.")
             return None
