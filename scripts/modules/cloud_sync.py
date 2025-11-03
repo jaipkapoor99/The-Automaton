@@ -26,7 +26,8 @@ class CloudSyncer:
 
     def _sync_any_content_to_gsheet(
         self,
-        content_dict,
+        sheet_name,
+        data,
         sheet_id,
         sheet_id_source_name="provided",
         max_retries=5,
@@ -62,12 +63,11 @@ class CloudSyncer:
                 }
 
                 requests = []
-                for sheet_name, data in content_dict.items():
-                    if sheet_name not in existing_sheets:
-                        # Add request to create new sheet
-                        requests.append(
-                            {"addSheet": {"properties": {"title": sheet_name}}}
-                        )
+                if sheet_name not in existing_sheets:
+                    # Add request to create new sheet
+                    requests.append(
+                        {"addSheet": {"properties": {"title": sheet_name}}}
+                    )
 
                 if requests:
                     sheets_service.spreadsheets().batchUpdate(
@@ -84,26 +84,25 @@ class CloudSyncer:
                         for s in spreadsheet_metadata.get("sheets", [])
                     }
 
-                for sheet_name, data in content_dict.items():
-                    # Clear existing content in the sheet
-                    clear_range = f"'{sheet_name}'!A:Z"  # Clear a wide range
-                    sheets_service.spreadsheets().values().clear(
-                        spreadsheetId=sheet_id, range=clear_range, body={}
-                    ).execute()
+                # Clear existing content in the sheet
+                clear_range = f"'{sheet_name}'!A:Z"  # Clear a wide range
+                sheets_service.spreadsheets().values().clear(
+                    spreadsheetId=sheet_id, range=clear_range, body={}
+                ).execute()
 
-                    # Write new content
-                    if data:
-                        body = {"values": data}
-                        sheets_service.spreadsheets().values().update(
-                            spreadsheetId=sheet_id,
-                            range=f"'{sheet_name}'!A1",
-                            valueInputOption="RAW",
-                            body=body,
-                        ).execute()
-                    else:
-                        print(
-                            f"WARNING: No content provided for sheet '{sheet_name}'. Sheet is now empty."
-                        )
+                # Write new content
+                if data:
+                    body = {"values": data}
+                    sheets_service.spreadsheets().values().update(
+                        spreadsheetId=sheet_id,
+                        range=f"'{sheet_name}'!A1",
+                        valueInputOption="RAW",
+                        body=body,
+                    ).execute()
+                else:
+                    print(
+                        f"WARNING: No content provided for sheet '{sheet_name}'. Sheet is now empty."
+                    )
 
                 print(f"Successfully synced content to Google Sheet ID: {sheet_id}.")
                 return True
@@ -139,7 +138,7 @@ class CloudSyncer:
         from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync Codeforces Profile to Google Sheet")
         return self._sync_any_content_to_gsheet(
-            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+            "Codeforces", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
         )
 
     def sync_leetcode_to_gsheet(self, content_dict):
@@ -147,7 +146,7 @@ class CloudSyncer:
         from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync LeetCode Profile to Google Sheet")
         return self._sync_any_content_to_gsheet(
-            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+            "LeetCode", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
         )
 
     def sync_steam_to_gsheet(self, content_dict):
@@ -155,15 +154,7 @@ class CloudSyncer:
         from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync Steam Stats to Google Sheet")
         return self._sync_any_content_to_gsheet(
-            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
-        )
-
-    def sync_youtube_to_gsheet(self, content_dict):
-        """Syncs the YouTube stats to its Google Sheet."""
-        from scripts.config import GOOGLE_SHEET_ID
-        print_section_header("Sync YouTube Stats to Google Sheet")
-        return self._sync_any_content_to_gsheet(
-            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+            "Steam", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
         )
 
     def sync_chesscom_to_gsheet(self, content_dict):
@@ -171,36 +162,5 @@ class CloudSyncer:
         from scripts.config import GOOGLE_SHEET_ID
         print_section_header("Sync Chess.com Profile to Google Sheet")
         return self._sync_any_content_to_gsheet(
-            content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
+            "Chess.com", content_dict, GOOGLE_SHEET_ID, "GOOGLE_SHEET_ID"
         )
-
-    def sync_all_profiles_to_gsheets(self, profiles_content_dict):
-        """Syncs all supported shared files to their respective Google Sheets."""
-        print_section_header("Sync All Shared Files to Google Sheets")
-        
-        all_successful = True
-        
-        # A dictionary mapping profile type to its sync function
-        sync_functions = {
-            "codeforces": self.sync_codeforces_to_gsheet,
-            "leetcode": self.sync_leetcode_to_gsheet,
-            "steam": self.sync_steam_to_gsheet,
-            "youtube": self.sync_youtube_to_gsheet,
-            "chesscom": self.sync_chesscom_to_gsheet,
-        }
-
-        for profile_type, sync_func in sync_functions.items():
-            content_dict = profiles_content_dict.get(profile_type)
-            if content_dict is None:
-                print(f"WARNING: No content provided for {profile_type}. Skipping sync.")
-                continue
-
-            try:
-                if not sync_func(content_dict):
-                    all_successful = False
-                    print(f"Sync failed for: {profile_type}")
-            except Exception as e:
-                all_successful = False
-                print(f"An unexpected error occurred during sync for {profile_type}: {e}")
-        
-        return all_successful

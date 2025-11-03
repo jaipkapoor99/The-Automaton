@@ -51,9 +51,6 @@ STEAM_API_KEY = os.environ.get("STEAM_API_KEY")
 STEAM_API_ENDPOINT = cfg["api_endpoints"]["steam"]
 
 
-# --- YouTube ---
-
-
 # --- Cloud Sync ---
 SCOPES = cfg["cloud"]["google_scopes"]
 TOKEN_FILE = os.path.join(ROOT_DIR, cfg["paths"]["token_file"])

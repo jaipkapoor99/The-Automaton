@@ -147,21 +147,21 @@ invoke_git_operations() {
 show_help() {
     # Using a "here document" to print a block of text.
     cat << EOF
-  sync-all                      Sync all profiles from the JSON file to Google Sheets.
+The-Automaton Repository Workflow Script
+========================================
+
+USAGE: ./scripts/workflow.sh [Action]
+
+ACTIONS:
   generate-codeforces           Generate Codeforces profile.
   sync-codeforces               Sync Codeforces profile to Google Sheets.
   generate-leetcode             Generate LeetCode profile.
   sync-leetcode                 Sync LeetCode profile to Google Sheets.
   generate-steam                Generate Steam profile.
   sync-steam                    Sync Steam profile to Google Sheets.
-  generate-youtube              Generate YouTube profile.
-  sync-youtube                  Sync YouTube profile to Google Sheets.
   generate-chesscom             Generate Chess.com profile.
   sync-chesscom                 Sync Chess.com profile to Google Sheets.
   help                          Show this help message.
-  
-OPTIONS:
-  -h, --help                    Show this help message
 EOF
 }
 
@@ -181,12 +181,6 @@ echo "Action: $ACTION"
 
 # Main control flow based on the action
 case "$ACTION" in
-    generate-all)
-        invoke_python_function "generate-all" "Generating all profiles"
-        ;;
-    sync-all)
-        invoke_python_function "sync-all" "Syncing all profiles to Google Sheets"
-        ;;
     generate-codeforces)
         invoke_python_function "generate-codeforces" "Generating Codeforces profile"
         ;;
@@ -204,12 +198,6 @@ case "$ACTION" in
         ;;
     sync-steam)
         invoke_python_function "sync-steam" "Syncing Steam profile"
-        ;;
-    generate-youtube)
-        invoke_python_function "generate-youtube" "Generating YouTube profile"
-        ;;
-    sync-youtube)
-        invoke_python_function "sync-youtube" "Syncing YouTube profile"
         ;;
     generate-chesscom)
         invoke_python_function "generate-chesscom" "Generating Chess.com profile"

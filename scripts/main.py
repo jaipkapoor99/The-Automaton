@@ -17,24 +17,7 @@ from scripts.modules.profile_generator import (
     CodeforcesGenerator,
     LeetCodeGenerator,
     SteamStatsGenerator,
-    YouTubeGenerator,
 )
-
-
-def _generate_all_profiles():
-    """Generates all profiles and returns a combined dictionary."""
-    all_profiles_data = {}
-    generators = [
-        CodeforcesGenerator,
-        LeetCodeGenerator,
-        SteamStatsGenerator,
-        YouTubeGenerator,
-        ChessComGenerator,
-    ]
-    for gen_class in generators:
-        profile_data = gen_class().generate()
-        all_profiles_data.update(profile_data)
-    return all_profiles_data
 
 
 def _generate_profile(generator_class, output_file):
@@ -48,14 +31,14 @@ def _generate_profile(generator_class, output_file):
     return False
 
 
-def _sync_profile(sync_function, json_file):
+def _sync_profile(sync_function, platform_name, json_file):
     """Syncs a single profile from a JSON file."""
     if not os.path.exists(json_file):
         print(f"[ERROR] JSON file not found: {json_file}")
         return False
     with open(json_file, "r", encoding="utf-8") as f:
         content_to_sync = json.load(f)
-    return sync_function(content_to_sync)
+    return sync_function(content_to_sync.get(platform_name, {}))
 
 
 def main():
@@ -70,7 +53,6 @@ def main():
     cloud_syncer = CloudSyncer()
 
     workflows = {
-        "generate-all": _generate_all_profiles,
         "generate-codeforces": lambda: _generate_profile(
             CodeforcesGenerator, os.path.join(TEMP_DIR, "codeforces_profile.json")
         ),
@@ -80,30 +62,23 @@ def main():
         "generate-steam": lambda: _generate_profile(
             SteamStatsGenerator, os.path.join(TEMP_DIR, "steam_profile.json")
         ),
-        "generate-youtube": lambda: _generate_profile(
-            YouTubeGenerator, os.path.join(TEMP_DIR, "youtube_profile.json")
-        ),
         "generate-chesscom": lambda: _generate_profile(
             ChessComGenerator, os.path.join(TEMP_DIR, "chesscom_profile.json")
         ),
         "sync-codeforces": lambda: _sync_profile(
-            cloud_syncer.sync_codeforces_to_gsheet,
+            cloud_syncer.sync_codeforces_to_gsheet, "Codeforces",
             os.path.join(TEMP_DIR, "codeforces_profile.json"),
         ),
         "sync-leetcode": lambda: _sync_profile(
-            cloud_syncer.sync_leetcode_to_gsheet,
+            cloud_syncer.sync_leetcode_to_gsheet, "LeetCode",
             os.path.join(TEMP_DIR, "leetcode_profile.json"),
         ),
         "sync-steam": lambda: _sync_profile(
-            cloud_syncer.sync_steam_to_gsheet,
+            cloud_syncer.sync_steam_to_gsheet, "Steam",
             os.path.join(TEMP_DIR, "steam_profile.json"),
         ),
-        "sync-youtube": lambda: _sync_profile(
-            cloud_syncer.sync_youtube_to_gsheet,
-            os.path.join(TEMP_DIR, "youtube_profile.json"),
-        ),
         "sync-chesscom": lambda: _sync_profile(
-            cloud_syncer.sync_chesscom_to_gsheet,
+            cloud_syncer.sync_chesscom_to_gsheet, "Chess.com",
             os.path.join(TEMP_DIR, "chesscom_profile.json"),
         ),
     }
@@ -112,26 +87,9 @@ def main():
         if "generate" in workflow:
             data = workflows[workflow]()
             if data:
-                if workflow == "generate-all":
-                    output_file = os.path.join(TEMP_DIR, "all_profiles.json")
-                    with open(output_file, "w", encoding="utf-8") as f:
-                        json.dump(data, f, indent=4)
                 success = True
         elif "sync" in workflow:
             success = workflows[workflow]()
-
-    elif workflow == "sync-all":
-        json_file = os.path.join(TEMP_DIR, "all_profiles.json")
-        if not os.path.exists(json_file):
-            print(
-                "[ERROR] 'all_profiles.json' not found. Please run the 'generate-all' workflow first or ensure individual profile JSONs exist for merging."
-            )
-            sys.exit(1)
-
-        with open(json_file, "r", encoding="utf-8") as f:
-            content_to_sync = json.load(f)
-
-        success = cloud_syncer.sync_all_profiles_to_gsheets(content_to_sync)
     else:
         print(
             f"[ERROR] Unknown or unsupported workflow for this script version: {workflow}"

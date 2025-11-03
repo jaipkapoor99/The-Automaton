@@ -287,7 +287,7 @@ class CodeforcesGenerator:
                 profile_data["Problem Submission History"] = problem_history_data
 
         print(f"Successfully generated exhaustive Codeforces profile for {self.handle}")
-        return {f"Codeforces - {k}": v for k, v in profile_data.items()}
+        return profile_data
 
 
 class LeetCodeGenerator:
@@ -382,7 +382,7 @@ class LeetCodeGenerator:
                 submission_calendar_data.append(["Calendar Data", "Not available."])
             profile_data["Submission Calendar"] = submission_calendar_data
 
-        return {f"LeetCode - {k}": v for k, v in profile_data.items()}
+        return profile_data
 
 
 class SteamStatsGenerator:
@@ -565,206 +565,7 @@ class SteamStatsGenerator:
             )
         profile_data["Game Library"] = game_library_sheet
 
-        return {f"Steam - {k}": v for k, v in profile_data.items()}
-
-
-class YouTubeGenerator:
-    """Generates a YouTube profile."""
-
-    def __init__(self):
-        self.youtube_service = None
-
-    def _get_channel_stats(self):
-        if not self.youtube_service:
-            return None
-        try:
-            request = self.youtube_service.channels().list(
-                part="snippet,contentDetails,statistics", mine=True
-            )
-            response = request.execute()
-            return response.get("items", [{}])[0]
-        except HttpError as err:
-            print(f"YouTube API HttpError: {err.resp.status} - {err.content}")
-            return None
-        except Exception as e:
-            print(f"Error fetching YouTube channel stats: {e}")
-            return None
-
-    def _get_playlists(self):
-        if not self.youtube_service:
-            return []
-        playlists = []
-        request = self.youtube_service.playlists().list(
-            part="snippet,contentDetails", mine=True, maxResults=50
-        )
-        while request:
-            response = request.execute()
-            playlists.extend(response.get("items", []))
-            request = self.youtube_service.playlists().list_next(request, response)
-        return playlists
-
-    def _get_playlist_videos(self, playlist_id):
-        if not self.youtube_service:
-            return []
-        videos = []
-        request = self.youtube_service.playlistItems().list(
-            part="snippet,contentDetails", playlistId=playlist_id, maxResults=50
-        )
-        while request and len(videos) < 500:
-            response = request.execute()
-            videos.extend(response.get("items", []))
-            request = self.youtube_service.playlistItems().list_next(request, response)
-        return videos
-
-    def _get_video_stats(self, video_id):
-        if not self.youtube_service:
-            return None
-        request = self.youtube_service.videos().list(part="statistics", id=video_id)
-        response = request.execute()
-        return response.get("items", [{}])[0].get("statistics", {})
-
-    def _get_special_playlist(self, playlist_id, limit=500):
-        if not self.youtube_service:
-            return []
-        videos = []
-        try:
-            request = self.youtube_service.playlistItems().list(
-                part="snippet", playlistId=playlist_id, maxResults=50
-            )
-            while request and len(videos) < limit:
-                response = request.execute()
-                videos.extend(response.get("items", []))
-                request = self.youtube_service.playlistItems().list_next(
-                    request, response
-                )
-        except Exception as e:
-            print(
-                f"Could not fetch playlist {playlist_id}. It might be private or disabled. Error: {e}"
-            )
-            return []
-        return videos
-
-    def _get_subscriptions(self):
-        if not self.youtube_service:
-            return []
-        subscriptions = []
-        request = self.youtube_service.subscriptions().list(
-            part="snippet", mine=True, maxResults=50
-        )
-        while request:
-            response = request.execute()
-            subscriptions.extend(response.get("items", []))
-            request = self.youtube_service.subscriptions().list_next(request, response)
-        return subscriptions
-
-    def generate(self):
-        """Fetches and generates the YouTube profile as structured data."""
-        print("Generating YouTube profile...")
-
-        try:
-            self.youtube_service = GoogleAuthenticator().get_user_service("youtube", "v3")
-        except Exception as e:
-            print(f"WARNING: Could not authenticate YouTube service. Skipping profile generation. Error: {e}")
-            return {}
-
-        profile_data = {}
-        channel_data = self._get_channel_stats()
-        if not channel_data:
-            print("Could not fetch channel data.")
-            return {}
-
-        stats = channel_data.get("statistics", {})
-        snippet = channel_data.get("snippet", {})
-
-        # Channel Summary
-        channel_summary_sheet = [
-            ["Metric", "Value"],
-            ["Channel Name", snippet.get("title", "N/A")],
-            ["Generated On", datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
-            ["Subscribers", stats.get("subscriberCount", "N/A")],
-            ["Total Views", stats.get("viewCount", "N/A")],
-            ["Total Videos", stats.get("videoCount", "N/A")],
-            ["Published At", snippet.get("publishedAt", "N/A")],
-        ]
-        profile_data["Channel Summary"] = channel_summary_sheet
-
-        # Playlists
-        playlists_sheet = [
-            ["Playlist Title", "Video Title", "Views", "Likes", "Comments"]
-        ]
-        playlists = self._get_playlists()
-        if playlists:
-            for playlist in playlists:
-                playlist_snippet = playlist.get("snippet", {})
-                playlist_title = playlist_snippet.get("title", "N/A")
-                videos = self._get_playlist_videos(playlist.get("id"))
-                if videos:
-                    for video in videos:
-                        video_snippet = video.get("snippet", {})
-                        video_stats = self._get_video_stats(
-                            video_snippet.get("resourceId", {}).get("videoId")
-                        )
-                        playlists_sheet.append(
-                            [
-                                playlist_title,
-                                video_snippet.get("title", "N/A"),
-                                video_stats.get("viewCount", "N/A"),
-                                video_stats.get("likeCount", "N/A"),
-                                video_stats.get("commentCount", "N/A"),
-                            ]
-                        )
-                else:
-                    playlists_sheet.append(
-                        [playlist_title, "No videos found.", "", "", ""]
-                    )
-        else:
-            playlists_sheet.append(["No playlists found.", "", "", "", ""])
-        profile_data["Playlists"] = playlists_sheet
-
-        # Liked Videos
-        liked_videos_sheet = [["Video Title", "Channel Name"]]
-        liked_videos = self._get_special_playlist("LL")
-        if liked_videos:
-            for item in liked_videos:
-                snippet = item.get("snippet", {})
-                liked_videos_sheet.append(
-                    [
-                        snippet.get("title", "N/A"),
-                        snippet.get("videoOwnerChannelTitle", "N/A"),
-                    ]
-                )
-        else:
-            liked_videos_sheet.append(["No liked videos found.", ""])
-        profile_data["Liked Videos"] = liked_videos_sheet
-
-        # Watch History
-        watch_history_sheet = [["Video Title", "Channel Name"]]
-        watch_history = self._get_special_playlist("HL")
-        if watch_history:
-            for item in watch_history:
-                snippet = item.get("snippet", {})
-                watch_history_sheet.append(
-                    [
-                        snippet.get("title", "N/A"),
-                        snippet.get("videoOwnerChannelTitle", "N/A"),
-                    ]
-                )
-        else:
-            watch_history_sheet.append(["No watch history found.", ""])
-        profile_data["Watch History"] = watch_history_sheet
-
-        # Subscriptions
-        subscriptions_sheet = [["Channel Name"]]
-        subscriptions = self._get_subscriptions()
-        if subscriptions:
-            for item in subscriptions:
-                snippet = item.get("snippet", {})
-                subscriptions_sheet.append([snippet.get("title", "N/A")])
-        else:
-            subscriptions_sheet.append(["No subscriptions found."])
-        profile_data["Subscriptions"] = subscriptions_sheet
-
-        return {f"YouTube - {k}": v for k, v in profile_data.items()}
+        return profile_data
 
 
 class ChessComGenerator:
@@ -928,4 +729,4 @@ class ChessComGenerator:
             profile_data["Blitz Games"] = blitz_games_sheet
 
         print(f"Successfully generated Chess.com profile for {self.username}")
-        return {f"Chess.com - {k}": v for k, v in profile_data.items()}
+        return profile_data
