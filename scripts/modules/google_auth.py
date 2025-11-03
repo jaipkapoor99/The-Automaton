@@ -4,6 +4,7 @@ Handles Google API Authentication using OAuth 2.0.
 """
 import os
 import socket
+from typing import Optional
 
 from config import (GOOGLE_AUTH_PROVIDER_X509_CERT_URL, GOOGLE_AUTH_URI,
                     GOOGLE_AUTH_URL_FILE, GOOGLE_CLIENT_ID,
@@ -17,7 +18,7 @@ try:
     from google.oauth2 import service_account
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
-    from googleapiclient.discovery import build
+    from googleapiclient.discovery import Resource, build
 
     GOOGLE_LIBS_AVAILABLE = True
 except ImportError:
@@ -103,7 +104,7 @@ class GoogleAuthenticator:
                 token.write(creds.to_json())
         return creds
 
-    def get_service(self, service_name, version):
+    def get_service(self, service_name: str, version: str) -> Optional[Resource]:
         """Builds and returns an authorized API service object using service account credentials."""
         if not self.creds:
             self.creds = self._authenticate_service_account()
@@ -127,7 +128,7 @@ class GoogleAuthenticator:
         finally:
             socket.setdefaulttimeout(original_timeout)
 
-    def get_user_service(self, service_name, version):
+    def get_user_service(self, service_name: str, version: str) -> Optional[Resource]:
         """Builds and returns an authorized API service object using user-based OAuth credentials."""
         user_creds = self._authenticate_user_oauth()
         if not user_creds:

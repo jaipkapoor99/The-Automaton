@@ -5,9 +5,10 @@ to local directories and Google Drive.
 """
 import socket
 import time
-from typing import Any, List
+from typing import Any, Dict, List, Optional
 
 from config import GOOGLE_SHEET_ID, print_section_header
+from googleapiclient.discovery import Resource
 from googleapiclient.errors import HttpError
 from modules.google_auth import GoogleAuthenticator
 
@@ -21,35 +22,37 @@ class CloudSyncer:
         except ImportError:
             self.authenticator = None
 
-    def _create_and_clear_sheet(self, sheets_service, sheet_id, sheet_name):
+    def _create_and_clear_sheet(
+        self, sheets_service: Resource, sheet_id: str, sheet_name: str
+    ):
         """Creates a new sheet if it doesn't exist and clears its content."""
-        spreadsheet_metadata = (
-            sheets_service.spreadsheets()
+        spreadsheet_metadata: Dict[str, Any] = (
+            sheets_service.spreadsheets()  # pylint: disable=no-member
             .get(spreadsheetId=sheet_id)
-            .execute()  # pylint: disable=no-member
+            .execute()
         )
-        existing_sheets = {
+        existing_sheets: Dict[str, Any] = {
             s["properties"]["title"]: s["properties"]["sheetId"]
             for s in spreadsheet_metadata.get("sheets", [])
         }
         if sheet_name not in existing_sheets:
             requests = [{"addSheet": {"properties": {"title": sheet_name}}}]
-            sheets_service.spreadsheets().batchUpdate(
+            sheets_service.spreadsheets().batchUpdate(  # pylint: disable=no-member
                 spreadsheetId=sheet_id, body={"requests": requests}
             ).execute()
         clear_range = f"'{sheet_name}'!A:Z"
-        sheets_service.spreadsheets().values().clear(
+        sheets_service.spreadsheets().values().clear(  # pylint: disable=no-member
             spreadsheetId=sheet_id, range=clear_range, body={}
         ).execute()
 
     def _sync_any_content_to_gsheet(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
-        sheet_name,
-        data,
-        sheet_id,
-        sheet_id_source_name="provided",
-        max_retries=5,
-        initial_delay=1,
+        sheet_name: str,
+        data: List[List[Any]],
+        sheet_id: Optional[str],
+        sheet_id_source_name: str = "provided",
+        max_retries: int = 5,
+        initial_delay: int = 1,
     ):
         """
         Generic function to sync a dictionary of content to a specific Google Sheet.
@@ -66,7 +69,9 @@ class CloudSyncer:
         success = False
         for attempt in range(max_retries):
             try:
-                sheets_service = self.authenticator.get_service("sheets", "v4")
+                sheets_service: Optional[Resource] = self.authenticator.get_service(
+                    "sheets", "v4"
+                )
                 if not sheets_service:
                     break
 
@@ -91,12 +96,12 @@ class CloudSyncer:
             except (HttpError, socket.timeout) as err:
                 if (
                     isinstance(err, HttpError)
-                    and err.resp.status in [403, 429, 500, 503]
+                    and err.resp.status in [403, 429, 500, 503]  # type: ignore
                     and attempt < max_retries - 1
                 ):
                     delay = initial_delay * (2**attempt)
                     print(
-                        f"Google API error (status {err.resp.status}). Retrying in {delay} seconds..."
+                        f"Google API error (status {err.resp.status}). Retrying in {delay} seconds..."  # type: ignore
                     )
                     time.sleep(delay)
                 elif isinstance(err, socket.timeout) and attempt < max_retries - 1:
