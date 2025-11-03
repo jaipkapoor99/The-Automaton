@@ -7,11 +7,6 @@ import socket
 import time
 
 from scripts.config import (
-    GOOGLE_SHEET_CHESSCOM_ID,
-    GOOGLE_SHEET_CODEFORCES_ID,
-    GOOGLE_SHEET_LEETCODE_ID,
-    GOOGLE_SHEET_STEAM_ID,
-    GOOGLE_SHEET_YOUTUBE_ID,
     print_section_header,
 )
 from scripts.modules.google_auth import GOOGLE_LIBS_AVAILABLE, GoogleAuthenticator
