@@ -572,7 +572,7 @@ class YouTubeGenerator:
     """Generates a YouTube profile."""
 
     def __init__(self):
-        self.youtube_service = GoogleAuthenticator().get_user_service("youtube", "v3")
+        self.youtube_service = None
 
     def _get_channel_stats(self):
         if not self.youtube_service:
@@ -659,7 +659,13 @@ class YouTubeGenerator:
 
     def generate(self):
         """Fetches and generates the YouTube profile as structured data."""
-        print(f"Generating YouTube profile...")
+        print("Generating YouTube profile...")
+
+        try:
+            self.youtube_service = GoogleAuthenticator().get_user_service("youtube", "v3")
+        except Exception as e:
+            print(f"WARNING: Could not authenticate YouTube service. Skipping profile generation. Error: {e}")
+            return {}
 
         profile_data = {}
         channel_data = self._get_channel_stats()

@@ -155,6 +155,11 @@ USAGE: ./scripts/workflow.sh [Action]
 ACTIONS:
   generate-all                  Generate all profiles into a single JSON file.
   sync-all                      Sync all profiles from the JSON file to Google Sheets.
+  generate-codeforces           Generate Codeforces profile.
+  generate-leetcode             Generate LeetCode profile.
+  generate-steam                Generate Steam profile.
+  generate-youtube              Generate YouTube profile.
+  generate-chesscom             Generate Chess.com profile.
   help                          Show this help message.
   
 OPTIONS:
@@ -183,6 +188,21 @@ case "$ACTION" in
         ;;
     sync-all)
         invoke_python_function "sync-all" "Syncing all profiles to Google Sheets"
+        ;;
+    generate-codeforces)
+        invoke_python_function "generate-codeforces" "Generating Codeforces profile"
+        ;;
+    generate-leetcode)
+        invoke_python_function "generate-leetcode" "Generating LeetCode profile"
+        ;;
+    generate-steam)
+        invoke_python_function "generate-steam" "Generating Steam profile"
+        ;;
+    generate-youtube)
+        invoke_python_function "generate-youtube" "Generating YouTube profile"
+        ;;
+    generate-chesscom)
+        invoke_python_function "generate-chesscom" "Generating Chess.com profile"
         ;;
     *)
         # This will trigger the error trap

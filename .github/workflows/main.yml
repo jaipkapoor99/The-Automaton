@@ -27,47 +27,130 @@ jobs:
         name: gcp-credentials
         path: ${{ steps.auth.outputs.credentials_file_path }}
 
-  generate-all-profiles:
+  generate-codeforces:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.x'
-
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
+    - name: Run Codeforces Generation
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh generate-codeforces
+      env:
+        CODEFORCES_ID: ${{ secrets.CODEFORCES_ID }}
+    - name: Upload Codeforces profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: codeforces-profile
+        path: Temp/codeforces_profile.json
 
+  generate-leetcode:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+    - name: Run LeetCode Generation
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh generate-leetcode
+      env:
+        LEETCODE_ID: ${{ secrets.LEETCODE_ID }}
+    - name: Upload LeetCode profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: leetcode-profile
+        path: Temp/leetcode_profile.json
+
+  generate-steam:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+    - name: Run Steam Generation
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh generate-steam
+      env:
+        STEAM_ID: ${{ secrets.STEAM_ID }}
+        STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+    - name: Upload Steam profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: steam-profile
+        path: Temp/steam_profile.json
+
+  generate-youtube:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
     - name: Prepare user OAuth token file for scripts
       run: |
         echo '${{ secrets.GOOGLE_OAUTH_TOKEN_JSON }}' > token.json
-
-    - name: Run All Profile Generation
+    - name: Run YouTube Generation
       run: |
         chmod +x scripts/workflow.sh
-        ./scripts/workflow.sh generate-all
+        ./scripts/workflow.sh generate-youtube
       env:
-        CODEFORCES_ID: ${{ secrets.CODEFORCES_ID }}
-        LEETCODE_ID: ${{ secrets.LEETCODE_ID }}
-        STEAM_ID: ${{ secrets.STEAM_ID }}
-        STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
-        CHESSCOM_ID: ${{ secrets.CHESSCOM_ID }}
         GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
-
-    - name: Upload all profiles artifact
+    - name: Upload YouTube profile artifact
       uses: actions/upload-artifact@v4
       with:
-        name: all-profiles-data
-        path: Temp/all_profiles.json
+        name: youtube-profile
+        path: Temp/youtube_profile.json
+
+  generate-chesscom:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: pip install -r scripts/requirements.txt
+    - name: Run Chess.com Generation
+      run: |
+        chmod +x scripts/workflow.sh
+        ./scripts/workflow.sh generate-chesscom
+      env:
+        CHESSCOM_ID: ${{ secrets.CHESSCOM_ID }}
+    - name: Upload Chess.com profile artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: chesscom-profile
+        path: Temp/chesscom_profile.json
 
   sync-all-profiles:
     runs-on: ubuntu-latest
-    needs: [authenticate-service-account, generate-all-profiles]
+    needs: [authenticate-service-account, generate-codeforces, generate-leetcode, generate-steam, generate-youtube, generate-chesscom]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -79,6 +162,25 @@ jobs:
 
     - name: Install dependencies
       run: pip install -r scripts/requirements.txt
+
+    - name: Download all profile artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: Temp
+
+    - name: Merge JSON artifacts
+      id: merge_json
+      run: |
+        echo "Merging JSON files..."
+        JSON_FILES=$(find Temp -type f -name '*.json')
+        if [ -z "$JSON_FILES" ]; then
+          echo "No JSON files found to merge."
+          exit 1
+        fi
+        # Use jq to merge all JSON files into one
+        jq -s 'add' $JSON_FILES > Temp/all_profiles.json
+        echo "Merged file content:"
+        cat Temp/all_profiles.json
 
     - name: Download service account credentials
       uses: actions/download-artifact@v4
@@ -90,12 +192,6 @@ jobs:
       run: |
         mkdir -p Temp
         cp gcp-creds/*.json Temp/service_account_key.json
-
-    - name: Download all profiles artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: all-profiles-data
-        path: Temp
 
     - name: Run All Profiles Sync
       run: |

@@ -37,6 +37,17 @@ def _generate_all_profiles():
     return all_profiles_data
 
 
+def _generate_profile(generator_class, output_file):
+    """Generates a single profile and saves it to a file."""
+    profile_data = generator_class().generate()
+    if profile_data:
+        os.makedirs(TEMP_DIR, exist_ok=True)
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(profile_data, f, indent=4)
+        return True
+    return False
+
+
 def main():
     """Main function that handles command line arguments and workflow execution."""
     if len(sys.argv) < 2:
@@ -48,26 +59,41 @@ def main():
 
     cloud_syncer = CloudSyncer()
 
-    if workflow == "generate-all":
-        all_data = _generate_all_profiles()
-        if all_data:
-            os.makedirs(TEMP_DIR, exist_ok=True)
-            output_file = os.path.join(TEMP_DIR, "all_profiles.json")
-            with open(output_file, "w", encoding="utf-8") as f:
-                json.dump(all_data, f, indent=4)
-            success = True
+    workflows = {
+        "generate-all": _generate_all_profiles,
+        "generate-codeforces": lambda: _generate_profile(
+            CodeforcesGenerator, os.path.join(TEMP_DIR, "codeforces_profile.json")
+        ),
+        "generate-leetcode": lambda: _generate_profile(
+            LeetCodeGenerator, os.path.join(TEMP_DIR, "leetcode_profile.json")
+        ),
+        "generate-steam": lambda: _generate_profile(
+            SteamStatsGenerator, os.path.join(TEMP_DIR, "steam_profile.json")
+        ),
+        "generate-youtube": lambda: _generate_profile(
+            YouTubeGenerator, os.path.join(TEMP_DIR, "youtube_profile.json")
+        ),
+        "generate-chesscom": lambda: _generate_profile(
+            ChessComGenerator, os.path.join(TEMP_DIR, "chesscom_profile.json")
+        ),
+    }
+
+    if workflow in workflows:
+        if "generate" in workflow:
+            all_data = workflows[workflow]()
+            if all_data:
+                if workflow == "generate-all":
+                    output_file = os.path.join(TEMP_DIR, "all_profiles.json")
+                    with open(output_file, "w", encoding="utf-8") as f:
+                        json.dump(all_data, f, indent=4)
+                success = True
     elif workflow == "sync-all":
         json_file = os.path.join(TEMP_DIR, "all_profiles.json")
         if not os.path.exists(json_file):
-            print("[INFO] 'all_profiles.json' not found. Generating first...")
-            all_data = _generate_all_profiles()
-            if all_data:
-                os.makedirs(TEMP_DIR, exist_ok=True)
-                with open(json_file, "w", encoding="utf-8") as f:
-                    json.dump(all_data, f, indent=4)
-            else:
-                print("[ERROR] Failed to generate profiles.")
-                sys.exit(1)
+            print(
+                "[ERROR] 'all_profiles.json' not found. Please run the 'generate-all' workflow first or ensure individual profile JSONs exist for merging."
+            )
+            sys.exit(1)
 
         with open(json_file, "r", encoding="utf-8") as f:
             content_to_sync = json.load(f)

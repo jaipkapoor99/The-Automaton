@@ -7,3 +7,5 @@ beautifulsoup4
 PyYAML
 black
 pylint
+autoflake
+isort
