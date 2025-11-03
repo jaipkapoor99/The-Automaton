@@ -5,6 +5,7 @@ references and linting Markdown files.
 """
 import subprocess
 from pathlib import Path
+from typing import Union
 
 from config import ROOT_DIR, print_section_header
 
@@ -12,7 +13,7 @@ from config import ROOT_DIR, print_section_header
 class Validator:
     """A class to handle validation tasks."""
 
-    def __init__(self, root_dir: Path = ROOT_DIR):
+    def __init__(self, root_dir: Union[str, Path] = ROOT_DIR):
         """Initializes the Validator."""
         self.root_dir = Path(root_dir)
 
