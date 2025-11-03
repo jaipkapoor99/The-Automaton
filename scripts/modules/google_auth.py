@@ -8,7 +8,7 @@ from scripts.config import (
     TOKEN_FILE, SCOPES, TEMP_DIR,
     GOOGLE_PROJECT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URIS,
-    GOOGLE_AUTH_URL_FILE, GOOGLE_SERVICE_ACCOUNT_KEY_PATH
+    GOOGLE_AUTH_URL_FILE, GOOGLE_SERVICE_ACCOUNT_KEY_PATH, GOOGLE_SHEETS_TIMEOUT
 )
 
 try:
@@ -105,7 +105,7 @@ class GoogleAuthenticator:
             return None
         
         original_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(GOOGLE_DOCS_TIMEOUT)
+        socket.setdefaulttimeout(GOOGLE_SHEETS_TIMEOUT)
         try:
             service = build(service_name, version, credentials=self.creds, cache_discovery=False)
             return service
@@ -123,7 +123,7 @@ class GoogleAuthenticator:
             return None
         
         original_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(GOOGLE_DOCS_TIMEOUT)
+        socket.setdefaulttimeout(GOOGLE_SHEETS_TIMEOUT)
         try:
             service = build(service_name, version, credentials=user_creds, cache_discovery=False)
             return service
