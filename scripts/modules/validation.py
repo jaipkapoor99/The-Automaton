@@ -12,7 +12,7 @@ from config import ROOT_DIR, print_section_header
 class Validator:
     """A class to handle validation tasks."""
 
-    def __init__(self, root_dir=ROOT_DIR):
+    def __init__(self, root_dir: Path = ROOT_DIR):
         """Initializes the Validator."""
         self.root_dir = Path(root_dir)
 
