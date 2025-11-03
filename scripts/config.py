@@ -58,11 +58,6 @@ STEAM_API_ENDPOINT = cfg["api_endpoints"]["steam"]
 SCOPES = cfg["cloud"]["google_scopes"]
 TOKEN_FILE = os.path.join(ROOT_DIR, cfg["paths"]["token_file"])
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID")
-GOOGLE_SHEET_CODEFORCES_ID = os.environ.get("GOOGLE_SHEET_CODEFORCES_ID")
-GOOGLE_SHEET_LEETCODE_ID = os.environ.get("GOOGLE_SHEET_LEETCODE_ID")
-GOOGLE_SHEET_STEAM_ID = os.environ.get("GOOGLE_SHEET_STEAM_ID")
-GOOGLE_SHEET_YOUTUBE_ID = os.environ.get("GOOGLE_SHEET_YOUTUBE_ID")
-GOOGLE_SHEET_CHESSCOM_ID = os.environ.get("GOOGLE_SHEET_CHESSCOM_ID")
 
 # --- Google Sheets ---
 GOOGLE_SHEETS_CONFIG = cfg.get("google_sheets", {})

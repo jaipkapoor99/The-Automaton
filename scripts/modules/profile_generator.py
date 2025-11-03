@@ -14,11 +14,19 @@ from typing import Any, Dict
 import requests
 from googleapiclient.errors import HttpError
 
-from scripts.config import (CF_API_KEY, CF_API_SECRET, CF_HANDLE,
-                            CHESSCOM_API_ENDPOINT, CHESSCOM_ID,
-                            CODEFORCES_API_ENDPOINT, LEETCODE_API_ENDPOINT,
-                            LEETCODE_USERNAME, STEAM_API_ENDPOINT,
-                            STEAM_API_KEY, STEAM_ID)
+from scripts.config import (
+    CF_API_KEY,
+    CF_API_SECRET,
+    CF_HANDLE,
+    CHESSCOM_API_ENDPOINT,
+    CHESSCOM_ID,
+    CODEFORCES_API_ENDPOINT,
+    LEETCODE_API_ENDPOINT,
+    LEETCODE_USERNAME,
+    STEAM_API_ENDPOINT,
+    STEAM_API_KEY,
+    STEAM_ID,
+)
 from scripts.modules.google_auth import GoogleAuthenticator
 
 
@@ -279,7 +287,7 @@ class CodeforcesGenerator:
                 profile_data["Problem Submission History"] = problem_history_data
 
         print(f"Successfully generated exhaustive Codeforces profile for {self.handle}")
-        return profile_data
+        return {f"Codeforces - {k}": v for k, v in profile_data.items()}
 
 
 class LeetCodeGenerator:
@@ -374,8 +382,7 @@ class LeetCodeGenerator:
                 submission_calendar_data.append(["Calendar Data", "Not available."])
             profile_data["Submission Calendar"] = submission_calendar_data
 
-        print(f"Successfully generated exhaustive LeetCode profile for {self.username}")
-        return profile_data
+        return {f"LeetCode - {k}": v for k, v in profile_data.items()}
 
 
 class SteamStatsGenerator:
@@ -558,8 +565,7 @@ class SteamStatsGenerator:
             )
         profile_data["Game Library"] = game_library_sheet
 
-        print(f"Successfully generated Steam profile for Steam ID: {self.steam_id}")
-        return profile_data
+        return {f"Steam - {k}": v for k, v in profile_data.items()}
 
 
 class YouTubeGenerator:
@@ -752,10 +758,7 @@ class YouTubeGenerator:
             subscriptions_sheet.append(["No subscriptions found."])
         profile_data["Subscriptions"] = subscriptions_sheet
 
-        print(
-            f"Successfully generated YouTube profile for channel {snippet.get('title', 'N/A')}"
-        )
-        return profile_data
+        return {f"YouTube - {k}": v for k, v in profile_data.items()}
 
 
 class ChessComGenerator:
@@ -919,4 +922,4 @@ class ChessComGenerator:
             profile_data["Blitz Games"] = blitz_games_sheet
 
         print(f"Successfully generated Chess.com profile for {self.username}")
-        return profile_data
+        return {f"Chess.com - {k}": v for k, v in profile_data.items()}
