@@ -55,8 +55,18 @@ class GoogleAuthenticator:
                     creds = None
             
             if not creds:
-                if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID]):
-                    print("CRITICAL ERROR: Google OAuth environment variables (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID) are not set. Cannot perform user OAuth.")
+                if os.environ.get("CI"):
+                    print(
+                        "CRITICAL ERROR: Running in CI environment. Invalid or missing token.json and interactive auth is not possible."
+                    )
+                    return None
+
+                if not all(
+                    [GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID]
+                ):
+                    print(
+                        "CRITICAL ERROR: Google OAuth environment variables (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID) are not set. Cannot perform user OAuth."
+                    )
                     return None
                 
                 client_config = {
