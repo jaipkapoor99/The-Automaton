@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import json
 
-from scripts.config import GOOGLE_SHEET_ID, TEMP_DIR
+from scripts.config import TEMP_DIR
 from scripts.modules.cloud_sync import CloudSyncer
 from scripts.modules.profile_generator import (
     ChessComGenerator,

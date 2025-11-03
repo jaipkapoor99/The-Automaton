@@ -63,7 +63,6 @@ GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID")
 GOOGLE_SHEETS_CONFIG = cfg.get("google_sheets", {})
 GOOGLE_SHEETS_TIMEOUT = GOOGLE_SHEETS_CONFIG.get("timeout", 60)
 GOOGLE_SHEETS_FOLDER_ID = GOOGLE_SHEETS_CONFIG.get("folder_id")
-GOOGLE_SHEETS_SPREADSHEET_ID = GOOGLE_SHEETS_CONFIG.get("spreadsheet_id")
 
 # --- Google OAuth (from .env) ---
 GOOGLE_AUTH_URL_FILE = os.path.join(TEMP_DIR, cfg["auth"]["url_file"])

@@ -47,7 +47,5 @@ google_sheets:
   timeout: 6000
   # Folder ID for "The Automaton" in Google Drive
   folder_id: "YOUR_FOLDER_ID_HERE"
-  # Spreadsheet ID for the profile
-  spreadsheet_id: "YOUR_SPREADSHEET_ID_HERE"
 
 
