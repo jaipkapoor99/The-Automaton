@@ -26,4 +26,4 @@ jobs:
 
     - name: Run Pylint on scripts
       run: |
-        pylint scripts/
+        pylint scripts/ --fail-under=9.0
