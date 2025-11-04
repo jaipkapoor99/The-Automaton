@@ -9,3 +9,4 @@ black
 pylint
 autoflake
 isort
+google-api-python-client-stubs

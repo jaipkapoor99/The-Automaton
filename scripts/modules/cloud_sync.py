@@ -5,10 +5,9 @@ to local directories and Google Drive.
 """
 import socket
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from config import GOOGLE_SHEET_ID, print_section_header
-from googleapiclient.discovery import Resource
 from googleapiclient.errors import HttpError
 from modules.google_auth import GoogleAuthenticator
 
@@ -23,7 +22,7 @@ class CloudSyncer:
             self.authenticator = None
 
     def _create_and_clear_sheet(
-        self, sheets_service: Resource, sheet_id: str, sheet_name: str
+        self, sheets_service: Any, sheet_id: str, sheet_name: str
     ):
         """Creates a new sheet if it doesn't exist and clears its content."""
         spreadsheet_metadata: Dict[str, Any] = (
@@ -69,11 +68,13 @@ class CloudSyncer:
         success = False
         for attempt in range(max_retries):
             try:
-                sheets_service: Optional[Resource] = self.authenticator.get_service(
+                raw_service = self.authenticator.get_service(
                     "sheets", "v4"
                 )
-                if not sheets_service:
+                if not raw_service:
                     break
+
+                sheets_service = cast(Any, raw_service)
 
                 self._create_and_clear_sheet(sheets_service, sheet_id, sheet_name)
 

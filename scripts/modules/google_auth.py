@@ -2,9 +2,11 @@
 """
 Handles Google API Authentication using OAuth 2.0.
 """
+from __future__ import annotations
+
 import os
 import socket
-from typing import Optional
+from typing import Any, Dict
 
 from config import (GOOGLE_AUTH_PROVIDER_X509_CERT_URL, GOOGLE_AUTH_URI,
                     GOOGLE_AUTH_URL_FILE, GOOGLE_CLIENT_ID,
@@ -20,27 +22,36 @@ try:
     from google_auth_oauthlib.flow import InstalledAppFlow
     from googleapiclient.discovery import Resource, build
 
-    GOOGLE_LIBS_AVAILABLE = True
+    _GOOGLE_LIBS_AVAILABLE = True
 except ImportError:
-    GOOGLE_LIBS_AVAILABLE = False
+    Request = None  # type: ignore[assignment]
+    service_account = None  # type: ignore[assignment]
+    Credentials = None  # type: ignore[assignment]
+    InstalledAppFlow = None  # type: ignore[assignment]
+    Resource = None  # type: ignore[assignment]
+    build = None  # type: ignore[assignment]
+
+    _GOOGLE_LIBS_AVAILABLE = False
 
 
 class GoogleAuthenticator:
     """A class to handle Google API authentication."""
 
     def __init__(self):
-        if not GOOGLE_LIBS_AVAILABLE:
+        if not _GOOGLE_LIBS_AVAILABLE:
             raise ImportError("Google client libraries not installed.")
-        self.creds = None
+        self.creds: Credentials | None = None
 
-    def _authenticate_service_account(self):
+    def _authenticate_service_account(self) -> service_account.Credentials | None:
         """Authenticates using a service account and returns credentials."""
         if GOOGLE_SERVICE_ACCOUNT_KEY_PATH and os.path.exists(
             GOOGLE_SERVICE_ACCOUNT_KEY_PATH
         ):
             try:
-                creds = service_account.Credentials.from_service_account_file(
-                    GOOGLE_SERVICE_ACCOUNT_KEY_PATH, scopes=SCOPES
+                creds: service_account.Credentials = (
+                    service_account.Credentials.from_service_account_file(
+                        GOOGLE_SERVICE_ACCOUNT_KEY_PATH, scopes=SCOPES
+                    )
                 )
                 print("Authenticated using Service Account.")
                 return creds
@@ -48,9 +59,9 @@ class GoogleAuthenticator:
                 print(f"Service Account authentication failed: {e}")
         return None
 
-    def _authenticate_user_oauth(self):
+    def _authenticate_user_oauth(self) -> Credentials | None:
         """Authenticates using user-based OAuth 2.0 and returns credentials."""
-        creds = None
+        creds: Credentials | None = None
         if os.path.exists(TOKEN_FILE):
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
 
@@ -70,7 +81,9 @@ class GoogleAuthenticator:
                     )
                     return None
 
-                if not all([GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID]):
+                if not all(
+                    [GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID]
+                ):
                     print(
                         "CRITICAL ERROR: Google OAuth environment variables (GOOGLE_CLIENT_ID, "
                         "GOOGLE_CLIENT_SECRET, GOOGLE_PROJECT_ID) are not set. "
@@ -78,7 +91,7 @@ class GoogleAuthenticator:
                     )
                     return None
 
-                client_config = {
+                client_config: Dict[str, Any] = {
                     "installed": {
                         "client_id": GOOGLE_CLIENT_ID,
                         "project_id": GOOGLE_PROJECT_ID,
@@ -90,7 +103,9 @@ class GoogleAuthenticator:
                     }
                 }
 
-                flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
+                flow: InstalledAppFlow = InstalledAppFlow.from_client_config(
+                    client_config, SCOPES
+                )
 
                 os.makedirs(TEMP_DIR, exist_ok=True)  # Ensure TEMP_DIR exists
                 auth_url, _ = flow.authorization_url(prompt="consent")
@@ -100,11 +115,12 @@ class GoogleAuthenticator:
                 flow.run_local_server(port=0)
                 creds = flow.credentials
 
-            with open(TOKEN_FILE, "w", encoding="utf-8") as token:
-                token.write(creds.to_json())
+            if creds:
+                with open(TOKEN_FILE, "w", encoding="utf-8") as token:
+                    token.write(creds.to_json())
         return creds
 
-    def get_service(self, service_name: str, version: str) -> Optional[Resource]:
+    def get_service(self, service_name: str, version: str) -> Resource | None:
         """Builds and returns an authorized API service object using service account credentials."""
         if not self.creds:
             self.creds = self._authenticate_service_account()
@@ -116,7 +132,7 @@ class GoogleAuthenticator:
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(GOOGLE_SHEETS_TIMEOUT)
         try:
-            service = build(
+            service: Resource = build(
                 service_name, version, credentials=self.creds, cache_discovery=False
             )
             return service
@@ -128,7 +144,7 @@ class GoogleAuthenticator:
         finally:
             socket.setdefaulttimeout(original_timeout)
 
-    def get_user_service(self, service_name: str, version: str) -> Optional[Resource]:
+    def get_user_service(self, service_name: str, version: str) -> Resource | None:
         """Builds and returns an authorized API service object using user-based OAuth credentials."""
         user_creds = self._authenticate_user_oauth()
         if not user_creds:
@@ -138,7 +154,7 @@ class GoogleAuthenticator:
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(GOOGLE_SHEETS_TIMEOUT)
         try:
-            service = build(
+            service: Resource = build(
                 service_name, version, credentials=user_creds, cache_discovery=False
             )
             return service
