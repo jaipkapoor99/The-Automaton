@@ -12,7 +12,6 @@ from modules.cloud_sync import CloudSyncer
 from modules.profile_generator import (ChessComGenerator, CodeforcesGenerator,
                                        LeetCodeGenerator, SteamStatsGenerator)
 
-
 def _generate_profile(
     generator_class: Union[
         Type[CodeforcesGenerator],

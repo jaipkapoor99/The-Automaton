@@ -4,3 +4,4 @@ Shared/
 .env
 token.json
 credentials.json
+.pylint.d/

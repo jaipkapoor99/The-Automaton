@@ -53,7 +53,6 @@ STEAM_API_ENDPOINT = cfg["api_endpoints"]["steam"]
 
 # --- Cloud Sync ---
 SCOPES = cfg["cloud"]["google_scopes"]
-TOKEN_FILE = os.path.join(ROOT_DIR, cfg["paths"]["token_file"])
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID")
 
 # --- Google Sheets ---
@@ -61,21 +60,10 @@ GOOGLE_SHEETS_CONFIG = cfg.get("google_sheets", {})
 GOOGLE_SHEETS_TIMEOUT = GOOGLE_SHEETS_CONFIG.get("timeout", 60)
 GOOGLE_SHEETS_FOLDER_ID = GOOGLE_SHEETS_CONFIG.get("folder_id")
 
-# --- Google OAuth (from .env) ---
-GOOGLE_AUTH_URL_FILE = os.path.join(TEMP_DIR, cfg["auth"]["url_file"])
-GOOGLE_AUTH_CODE_FILE = os.path.join(TEMP_DIR, cfg["auth"]["code_file"])
+# --- Google Service Account ---
 GOOGLE_SERVICE_ACCOUNT_KEY_PATH = os.path.join(
     ROOT_DIR, "Temp", "service_account_key.json"
 )
-GOOGLE_PROJECT_ID = os.environ.get("GOOGLE_PROJECT_ID")
-GOOGLE_AUTH_URI = os.environ.get("GOOGLE_AUTH_URI")
-GOOGLE_TOKEN_URI = os.environ.get("GOOGLE_TOKEN_URI")
-GOOGLE_AUTH_PROVIDER_X509_CERT_URL = os.environ.get(
-    "GOOGLE_AUTH_PROVIDER_X509_CERT_URL"
-)
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URIS = os.environ.get("GOOGLE_REDIRECT_URIS")
 
 
 # --- GitHub ---

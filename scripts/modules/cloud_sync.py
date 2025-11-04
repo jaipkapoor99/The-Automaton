@@ -5,11 +5,19 @@ to local directories and Google Drive.
 """
 import socket
 import time
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Protocol, cast
 
 from config import GOOGLE_SHEET_ID, print_section_header
 from googleapiclient.errors import HttpError
 from modules.google_auth import GoogleAuthenticator
+
+
+class SheetsServiceProtocol(Protocol):  # pylint: disable=too-few-public-methods
+    """Minimal protocol capturing the Google Sheets resource methods used here."""
+
+    def spreadsheets(self) -> Any:  # pragma: no cover - protocol definition only
+        """Return an accessor for spreadsheet operations."""
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 class CloudSyncer:
@@ -68,13 +76,13 @@ class CloudSyncer:
         success = False
         for attempt in range(max_retries):
             try:
-                raw_service = self.authenticator.get_service(
-                    "sheets", "v4"
-                )
-                if not raw_service:
+                raw_service = self.authenticator.get_service("sheets", "v4")
+                if raw_service is None:
                     break
 
-                sheets_service = cast(Any, raw_service)
+                sheets_service: SheetsServiceProtocol = cast(
+                    SheetsServiceProtocol, raw_service
+                )
 
                 self._create_and_clear_sheet(sheets_service, sheet_id, sheet_name)
 

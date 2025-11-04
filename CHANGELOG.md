@@ -33,29 +33,29 @@ and this project adheres to
 
 - **Initial Release**: First public version of The Automaton.
 - **Profile Generation**: Added modules to generate user profiles for
-    Codeforces, LeetCode, Steam, YouTube, and Chess.com.
+  Codeforces, LeetCode, Steam, YouTube, and Chess.com.
 - **Cloud Synchronization**: Implemented functionality to sync generated
-    profiles to Google Docs and a local directory.
+  profiles to Google Docs and a local directory.
 - **Configuration Management**: Centralized all configuration into
-    `config.yaml` and a `.env` file for sensitive data.
+  `config.yaml` and a `.env` file for sensitive data.
 - **Workflow Automation**: Created a PowerShell script (`workflow.ps1`) to
-    orchestrate all tasks and a Python script (`main.py`) to execute them.
+  orchestrate all tasks and a Python script (`main.py`) to execute them.
 - **Modular Architecture**: Designed the project with a modular structure to
-    allow for easy extension and maintenance.
+  allow for easy extension and maintenance.
 
 ### Changed
 
 - **Refactored for General Use**: Adapted the project from a personal script
-    into a generalized, reusable framework.
+  into a generalized, reusable framework.
 - **Improved Robustness**: Made file paths and API endpoints configurable,
-    and improved error handling throughout the application.
+  and improved error handling throughout the application.
 - **Consolidated Code**: Merged all profile generator classes into a single,
-    cohesive module.
+  cohesive module.
 
 ### Removed
 
 - **Resume Builder**: Removed all functionality related to building and
-    syncing a resume.
+  syncing a resume.
 - **File Concatenation**: Removed the file concatenation feature to focus on
-    core API interactions.
+  core API interactions.
 - **PC Specs Module**: Deleted the module for syncing PC specifications.

@@ -8,7 +8,7 @@ import string
 import time
 from collections import Counter
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 from config import (CF_API_KEY, CF_API_SECRET, CF_HANDLE,
@@ -20,7 +20,12 @@ from config import (CF_API_KEY, CF_API_SECRET, CF_HANDLE,
 class CodeforcesGenerator:
     """Generates a Codeforces profile."""
 
-    def __init__(self, handle=CF_HANDLE, api_key=CF_API_KEY, api_secret=CF_API_SECRET):
+    def __init__(
+        self,
+        handle: Optional[str] = CF_HANDLE,
+        api_key: Optional[str] = CF_API_KEY,
+        api_secret: Optional[str] = CF_API_SECRET,
+    ):
         self.handle = handle
         self.api_key = api_key
         self.api_secret = api_secret
@@ -31,7 +36,7 @@ class CodeforcesGenerator:
         This is a placeholder method to satisfy the pylint warning R0903.
         """
 
-    def _generate_api_sig(self, method_name, params):
+    def _generate_api_sig(self, method_name: str, params: Dict[str, Any]) -> str:
         """Generates the apiSig parameter for authorized methods."""
         rand_prefix = "".join(
             random.choices(string.ascii_lowercase + string.digits, k=6)
@@ -48,7 +53,7 @@ class CodeforcesGenerator:
 
         return rand_prefix + hasher.hexdigest()
 
-    def _fetch_data(self, method, params=None, authorized=False):
+    def _fetch_data(self, method: str, params: Optional[Dict[str, Any]] = None, authorized: bool = False) -> Any:
         if params is None:
             params = {}
 
@@ -75,7 +80,7 @@ class CodeforcesGenerator:
             print(f"An error occurred fetching data from {method}: {e}")
             return None
 
-    def _get_user_summary(self, aggregated_data):
+    def _get_user_summary(self, aggregated_data: List[List[Any]]) -> None:
         """Fetches user info and global rank."""
         user_info = self._fetch_data("user.info", params={"handles": self.handle})
         if not user_info:
@@ -115,7 +120,7 @@ class CodeforcesGenerator:
                 pass
         aggregated_data.append([])
 
-    def _get_submissions_analysis(self, aggregated_data):
+    def _get_submissions_analysis(self, aggregated_data: List[List[Any]]) -> None:
         """Fetches and analyzes user submissions."""
         all_submissions = self._fetch_data(
             "user.status", params={"handle": self.handle}
@@ -146,7 +151,7 @@ class CodeforcesGenerator:
             aggregated_data.append([tag, count])
         aggregated_data.append([])
 
-    def _get_contest_performance(self, aggregated_data):
+    def _get_contest_performance(self, aggregated_data: List[List[Any]]) -> None:
         """Fetches and analyzes contest performance."""
         rating_history = self._fetch_data("user.rating", params={"handle": self.handle})
         if not rating_history:
@@ -184,7 +189,7 @@ class CodeforcesGenerator:
             )
         aggregated_data.append([])
 
-    def _get_friends_list(self, aggregated_data):
+    def _get_friends_list(self, aggregated_data: List[List[Any]]) -> None:
         """Fetches the user's friends list."""
         friends = self._fetch_data(
             "user.friends", params={"onlyOnline": "false"}, authorized=True
@@ -211,7 +216,7 @@ class CodeforcesGenerator:
             return {}
         print(f"Generating exhaustive Codeforces profile for {self.handle}...")
 
-        aggregated_data = []
+        aggregated_data: List[List[Any]] = []
         self._get_user_summary(aggregated_data)
         self._get_submissions_analysis(aggregated_data)
         self._get_contest_performance(aggregated_data)
@@ -224,7 +229,7 @@ class CodeforcesGenerator:
 class LeetCodeGenerator:
     """Generates a LeetCode profile."""
 
-    def __init__(self, username=LEETCODE_USERNAME):
+    def __init__(self, username: Optional[str] = LEETCODE_USERNAME):
         self.username = username
 
     def placeholder(self):
@@ -242,7 +247,7 @@ class LeetCodeGenerator:
 class SteamStatsGenerator:
     """Generates a comprehensive Steam profile based on a detailed plan."""
 
-    def __init__(self, api_key=STEAM_API_KEY, steam_id=STEAM_ID):
+    def __init__(self, api_key: Optional[str] = STEAM_API_KEY, steam_id: Optional[str] = STEAM_ID):
         self.api_key = api_key
         self.steam_id = steam_id
         self.base_url = STEAM_API_ENDPOINT
@@ -262,7 +267,7 @@ class SteamStatsGenerator:
 class ChessComGenerator:
     """Generates a Chess.com profile."""
 
-    def __init__(self, username: str = CHESSCOM_ID):
+    def __init__(self, username: Optional[str] = CHESSCOM_ID):
         self.username = username
         self.base_url = CHESSCOM_API_ENDPOINT
 
@@ -272,6 +277,7 @@ class ChessComGenerator:
         """
 
     def _fetch_data(self, endpoint: str) -> Dict[str, Any]:
+        """Fetches data from Chess.com API."""
         url = f"{self.base_url}/{endpoint}"
         headers = {"User-Agent": "The-Automaton"}
         try:
@@ -282,7 +288,7 @@ class ChessComGenerator:
             print(f"An error occurred fetching data from {endpoint}: {e}")
             return {}
 
-    def _get_player_profile(self, aggregated_data):
+    def _get_player_profile(self, aggregated_data: List[List[Any]]) -> None:
         """Gets the player profile."""
         aggregated_data.append(["--- Player Profile ---"])
         aggregated_data.append(["Metric", "Value"])
@@ -309,7 +315,7 @@ class ChessComGenerator:
                 aggregated_data.append(["Last Online", last_online])
         aggregated_data.append([])
 
-    def _get_detailed_stats(self, aggregated_data):
+    def _get_detailed_stats(self, aggregated_data: List[List[Any]]) -> None:
         """Gets the detailed stats."""
         aggregated_data.append(["--- Detailed Stats ---"])
         aggregated_data.append(
@@ -375,7 +381,7 @@ class ChessComGenerator:
                 )
         aggregated_data.append([])
 
-    def _get_clubs(self, aggregated_data):
+    def _get_clubs(self, aggregated_data: List[List[Any]]) -> None:
         """Gets the clubs."""
         aggregated_data.append(["--- Clubs ---"])
         aggregated_data.append(["Club Name"])
@@ -387,15 +393,15 @@ class ChessComGenerator:
             aggregated_data.append(["No clubs found."])
         aggregated_data.append([])
 
-    def _get_recent_games(self, aggregated_data):
+    def _get_recent_games(self, aggregated_data: List[List[Any]]) -> None:
         """Gets the recent games."""
         archives_data = self._fetch_data(f"player/{self.username}/games/archives")
         if not archives_data or not archives_data.get("archives"):
             return
         aggregated_data.append(["--- Rapid Games (Last 100) ---"])
         aggregated_data.append(["PGN"])
-        rapid_games = []
-        blitz_games = []
+        rapid_games: List[Any] = []
+        blitz_games: List[Any] = []
         for archive_url in reversed(archives_data["archives"]):
             if len(rapid_games) >= 100 and len(blitz_games) >= 100:
                 break
@@ -423,7 +429,7 @@ class ChessComGenerator:
             print("ERROR: Chess.com username not set.")
             return {}
 
-        aggregated_data = []
+        aggregated_data: List[List[Any]] = []
         self._get_player_profile(aggregated_data)
         self._get_detailed_stats(aggregated_data)
         self._get_clubs(aggregated_data)
