@@ -12,7 +12,7 @@ online platforms.
   services like Codeforces, LeetCode, Chess.com, Steam, and YouTube.
 - **Cloud Sync**: Synchronize your data to a single Google Sheet (with separate subsheets for each platform's data) and a configurable local directory.
 - **Command-Line Interface**: A simple and intuitive CLI for running
-  workflows via a PowerShell script.
+  workflows directly via Python scripts.
 - **Customizable**: Configure the tool to your needs using a central
   `config.yaml` and a `.env` file for sensitive data.
 
@@ -23,11 +23,19 @@ see the [Setup Guide](SETUP.md).
 
 ## Usage
 
-All workflows are run through the `workflow.sh` script in the `scripts`
-directory. To see a list of all available actions, run:
+All workflows are run directly through the `main.py` script in the `scripts`
+directory. To see a list of available workflows, examine `scripts/main.py`.
+
+To run a specific workflow, use:
 
 ```bash
-./scripts/workflow.sh -Action help
+python3 scripts/main.py [workflow_name]
+```
+
+For example, to generate a Codeforces profile:
+
+```bash
+python3 scripts/main.py generate-codeforces
 ```
 
 ## Contributing

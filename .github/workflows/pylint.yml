@@ -3,6 +3,12 @@ name: Pylint
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'SETUP.md'
+      - 'GEMINI.md'
+      - 'CLAUDE.md'
   pull_request:
     branches: [ main ]
 
