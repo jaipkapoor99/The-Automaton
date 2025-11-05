@@ -27,10 +27,10 @@ class CodeforcesGenerator:
         handle: Optional[str] = CF_HANDLE,
         api_key: Optional[str] = CF_API_KEY,
         api_secret: Optional[str] = CF_API_SECRET,
-    ):
-        self.handle = handle
-        self.api_key = api_key
-        self.api_secret = api_secret
+    ) -> None:
+        self.handle: str | None = handle
+        self.api_key: str | None = api_key
+        self.api_secret: str | None = api_secret
         self.base_url = CODEFORCES_API_ENDPOINT
 
     def placeholder(self):
@@ -228,17 +228,17 @@ class CodeforcesGenerator:
         return aggregated_data
 
 
-class LeetCodeGenerator:
+class LeetCodeGenerator:  # pylint: disable=too-few-public-methods
     """Generates a LeetCode profile."""
 
-    def __init__(self, username: Optional[str] = LEETCODE_USERNAME):
-        self.username = username
+    def __init__(self, username: Optional[str] = LEETCODE_USERNAME) -> None:
+        self.username: str | None = username
 
     def _fetch_graphql_data(self, query: str, variables: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         response = None
         try:
             response = requests.post(
-                LEETCODE_API_ENDPOINT,
+                url=LEETCODE_API_ENDPOINT,
                 json={"query": query, "variables": variables},
                 timeout=15,
             )
@@ -329,7 +329,7 @@ class LeetCodeGenerator:
         return aggregated_data
 
 
-class SteamStatsGenerator:
+class SteamStatsGenerator:  # pylint: disable=too-few-public-methods
     """Generates a comprehensive Steam profile based on a detailed plan."""
 
     def __init__(self, api_key: Optional[str] = STEAM_API_KEY, steam_id: Optional[str] = STEAM_ID):
@@ -397,16 +397,8 @@ class SteamStatsGenerator:
     def _get_community_badge_progress(self) -> Optional[Dict[str, Any]]:
         return self._make_api_call("IPlayerService", "GetCommunityBadgeProgress", 1)
 
-    def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
-        """Fetches and generates the Steam profile as structured data."""
-        if not self.api_key or not self.steam_id:
-            print("ERROR: Steam API Key or Steam ID not set.")
-            return {}
-        print(f"Generating Steam profile for Steam ID: {self.steam_id}...")
-
-        aggregated_data: List[List[Any]] = []
-
-        # Profile Summary
+    def _add_profile_summary(self, aggregated_data: List[List[Any]]) -> None:
+        """Adds profile summary section to aggregated data."""
         aggregated_data.append(["--- Profile Summary ---"])
         aggregated_data.append(["Metric", "Value"])
         aggregated_data.append(
@@ -448,7 +440,8 @@ class SteamStatsGenerator:
             )
         aggregated_data.append([])
 
-        # Game Library Analysis
+    def _add_game_library(self, aggregated_data: List[List[Any]]) -> None:
+        """Adds game library section to aggregated data."""
         aggregated_data.append(["--- Game Library ---"])
         aggregated_data.append(
             [
@@ -470,34 +463,8 @@ class SteamStatsGenerator:
                 appid = game.get("appid")
                 playtime_hours = game.get("playtime_forever", 0) / 60
 
-                achievements_summary = "N/A"
-                achievements = self._get_player_achievements(appid)
-                if (
-                    achievements
-                    and achievements.get("playerstats", {}).get("success")
-                    and "achievements" in achievements["playerstats"]
-                ):
-                    achieved = [
-                        a
-                        for a in achievements["playerstats"]["achievements"]
-                        if a.get("achieved")
-                    ]
-                    total = len(achievements["playerstats"]["achievements"])
-                    achievements_summary = f"{len(achieved)} / {total}"
-
-                user_stats_summary = "N/A"
-                user_stats = self._get_user_stats_for_game(appid)
-                if (
-                    user_stats
-                    and user_stats.get("playerstats", {}).get("success")
-                    and "stats" in user_stats["playerstats"]
-                ):
-                    user_stats_summary = "; ".join(
-                        [
-                            f"{stat.get('name', 'N/A')}: {stat.get('value', 'N/A')}"
-                            for stat in user_stats["playerstats"]["stats"]
-                        ]
-                    )
+                achievements_summary = self._get_achievements_summary(appid)
+                user_stats_summary = self._get_user_stats_summary(appid)
 
                 aggregated_data.append(
                     [
@@ -511,6 +478,50 @@ class SteamStatsGenerator:
             aggregated_data.append(
                 ["Could not retrieve game library. Profile may be private.", "", "", ""]
             )
+
+    def _get_achievements_summary(self, appid: int) -> str:
+        """Gets achievements summary for a game."""
+        achievements = self._get_player_achievements(appid)
+        if (
+            achievements
+            and achievements.get("playerstats", {}).get("success")
+            and "achievements" in achievements["playerstats"]
+        ):
+            achieved = [
+                a
+                for a in achievements["playerstats"]["achievements"]
+                if a.get("achieved")
+            ]
+            total = len(achievements["playerstats"]["achievements"])
+            return f"{len(achieved)} / {total}"
+        return "N/A"
+
+    def _get_user_stats_summary(self, appid: int) -> str:
+        """Gets user stats summary for a game."""
+        user_stats = self._get_user_stats_for_game(appid)
+        if (
+            user_stats
+            and user_stats.get("playerstats", {}).get("success")
+            and "stats" in user_stats["playerstats"]
+        ):
+            return "; ".join(
+                [
+                    f"{stat.get('name', 'N/A')}: {stat.get('value', 'N/A')}"
+                    for stat in user_stats["playerstats"]["stats"]
+                ]
+            )
+        return "N/A"
+
+    def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
+        """Fetches and generates the Steam profile as structured data."""
+        if not self.api_key or not self.steam_id:
+            print("ERROR: Steam API Key or Steam ID not set.")
+            return {}
+        print(f"Generating Steam profile for Steam ID: {self.steam_id}...")
+
+        aggregated_data: List[List[Any]] = []
+        self._add_profile_summary(aggregated_data)
+        self._add_game_library(aggregated_data)
 
         print(f"Successfully generated Steam profile for Steam ID: {self.steam_id}")
         return aggregated_data
