@@ -10,3 +10,4 @@
 - The user prefers clear, concise commit messages that follow conventional formats.
 - Fall back on MCP servers as much as possible.
 - **Git and Workflow Commands**: The Gemini CLI should NOT run any `git` commands or workflow commands (e.g., `workflow.sh`, `workflow.ps1`). The user handles these operations exclusively via the VS Code GUI.
+- **Type Checking**: Proper type checking and type hints are essential, even if it means being pedantic. Ensure all functions and variables have appropriate type annotations.

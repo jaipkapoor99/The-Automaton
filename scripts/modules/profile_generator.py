@@ -520,8 +520,8 @@ class SteamStatsGenerator:  # pylint: disable=too-few-public-methods
         print(f"Generating Steam profile for Steam ID: {self.steam_id}...")
 
         aggregated_data: List[List[Any]] = []
-        self._add_profile_summary(aggregated_data)
-        self._add_game_library(aggregated_data)
+        self._add_profile_summary(aggregated_data=aggregated_data)
+        self._add_game_library(aggregated_data=aggregated_data)
 
         print(f"Successfully generated Steam profile for Steam ID: {self.steam_id}")
         return aggregated_data
@@ -541,8 +541,8 @@ class ChessComGenerator:
 
     def _fetch_data(self, endpoint: str) -> Dict[str, Any]:
         """Fetches data from Chess.com API."""
-        url = f"{self.base_url}/{endpoint}"
-        headers = {"User-Agent": "The-Automaton"}
+        url: str = f"{self.base_url}/{endpoint}"
+        headers: Dict[str, str] = {"User-Agent": "The-Automaton"}
         try:
             response = requests.get(url, headers=headers, timeout=15)
             response.raise_for_status()
@@ -618,8 +618,8 @@ class ChessComGenerator:
                         "N/A",
                         highest_tactics.get("rating", "N/A"),
                         (
-                            datetime.fromtimestamp(highest_tactics["date"]).strftime(
-                                "%Y-%m-%d"
+                            datetime.fromtimestamp(timestamp=highest_tactics["date"]).strftime(
+                                format="%Y-%m-%d"
                             )
                             if "date" in highest_tactics
                             else "N/A"
