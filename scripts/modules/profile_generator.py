@@ -3,6 +3,7 @@
 Generates profiles for various competitive programming and gaming platforms.
 """
 import hashlib
+import json
 import random
 import string
 import time
@@ -13,8 +14,9 @@ from typing import Any, Dict, List, Optional, Union
 import requests
 from config import (CF_API_KEY, CF_API_SECRET, CF_HANDLE,
                     CHESSCOM_API_ENDPOINT, CHESSCOM_ID,
-                    CODEFORCES_API_ENDPOINT, LEETCODE_USERNAME,
-                    STEAM_API_ENDPOINT, STEAM_API_KEY, STEAM_ID)
+                    CODEFORCES_API_ENDPOINT, LEETCODE_API_ENDPOINT,
+                    LEETCODE_USERNAME, STEAM_API_ENDPOINT, STEAM_API_KEY,
+                    STEAM_ID)
 
 
 class CodeforcesGenerator:
@@ -232,16 +234,99 @@ class LeetCodeGenerator:
     def __init__(self, username: Optional[str] = LEETCODE_USERNAME):
         self.username = username
 
-    def placeholder(self):
-        """
-        This is a placeholder method to satisfy the pylint warning R0903.
-        """
+    def _fetch_graphql_data(self, query: str, variables: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        response = None
+        try:
+            response = requests.post(
+                LEETCODE_API_ENDPOINT,
+                json={"query": query, "variables": variables},
+                timeout=15,
+            )
+            time.sleep(1)
+            response.raise_for_status()
+            return response.json().get("data")
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred fetching data: {e}")
+            return None
+        except ValueError:
+            if response:
+                print(
+                    f"Error decoding LeetCode API response (status {response.status_code})"
+                )
+            return None
 
     def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
+        """Fetches and generates the LeetCode profile as structured data."""
+        if not self.username:
+            print("ERROR: LeetCode username not set.")
+            return {}
+        print(f"Generating exhaustive LeetCode profile for {self.username}...")
+
+        aggregated_data: List[List[Any]] = []
+
+        query = """
+        query getUserProfile($username: String!) {
+          allQuestionsCount { difficulty count }
+          matchedUser(username: $username) {
+            username
+            contributions { points }
+            profile { realName ranking }
+            submissionCalendar
+            submitStats: submitStatsGlobal {
+              acSubmissionNum { difficulty count submissions }
+            }
+          }
+        }
         """
-        This is a placeholder method to satisfy the pylint warning R0903.
-        """
-        return {}
+        variables = {"username": self.username}
+        data = self._fetch_graphql_data(query, variables)
+
+        if data and data.get("matchedUser"):
+            user = data["matchedUser"]
+
+            # User Summary
+            aggregated_data.append(["--- User Summary ---"])
+            aggregated_data.append(["Metric", "Value"])
+            aggregated_data.extend([
+                ["Username", user.get("username", "N/A")],
+                ["Real Name", user.get("profile", {}).get("realName", "N/A")],
+                ["Global Ranking", user.get("profile", {}).get("ranking", "N/A")],
+                [
+                    "Contribution Points",
+                    user.get("contributions", {}).get("points", "N/A"),
+                ],
+                ["Generated On", datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+            ])
+            aggregated_data.append([])
+
+            # Problem Stats
+            aggregated_data.append(["--- Problem Stats ---"])
+            aggregated_data.append(["Difficulty", "Solved", "Submissions"])
+            stats = user.get("submitStats", {}).get("acSubmissionNum", [])
+            total_solved = sum(s["count"] for s in stats)
+            aggregated_data.append(["Total Solved", total_solved, "N/A"])
+            for s in stats:
+                aggregated_data.append([s["difficulty"], s["count"], s["submissions"]])
+            aggregated_data.append([])
+
+            # Submission Calendar
+            aggregated_data.append(["--- Submission Calendar ---"])
+            aggregated_data.append(["Metric", "Value"])
+            try:
+                calendar_data = json.loads(user.get("submissionCalendar", "{}"))
+                total_active_days = sum(
+                    1 for count in calendar_data.values() if int(count) > 0
+                )
+                aggregated_data.append(
+                    ["Total Active Days", total_active_days]
+                )
+                # Add more detailed calendar parsing here if needed
+            except (ValueError, TypeError):
+                aggregated_data.append(["Calendar Data", "Not available."])
+            aggregated_data.append([])
+
+        print(f"Successfully generated LeetCode profile for {self.username}")
+        return aggregated_data
 
 
 class SteamStatsGenerator:
@@ -252,16 +337,183 @@ class SteamStatsGenerator:
         self.steam_id = steam_id
         self.base_url = STEAM_API_ENDPOINT
 
-    def placeholder(self):
-        """
-        This is a placeholder method to satisfy the pylint warning R0903.
-        """
+    def _make_api_call(
+        self, interface: str, method: str, version: int, params: Optional[Dict[str, Any]] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Makes a call to the Steam Web API."""
+        if not self.api_key:
+            print("API Error: Steam API Key is missing.")
+            return None
+
+        url = f"{self.base_url}/{interface}/{method}/v{version}/"
+
+        base_params: Dict[str, Any] = {"key": self.api_key, "steamid": self.steam_id, "format": "json"}
+        if params:
+            base_params.update(params)
+
+        try:
+            response = requests.get(url, params=base_params, timeout=30)
+            time.sleep(0.5)  # Rate limiting
+            if response.status_code == 403:
+                print(
+                    "API Error: Access Denied (403). Profile may be private or API key invalid."
+                )
+                return None
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred fetching data from Steam API: {e}")
+            return None
+
+    def _get_player_summaries(self) -> Optional[Dict[str, Any]]:
+        return self._make_api_call(
+            "ISteamUser", "GetPlayerSummaries", 2, {"steamids": self.steam_id}
+        )
+
+    def _get_owned_games(self) -> Optional[Dict[str, Any]]:
+        return self._make_api_call(
+            "IPlayerService",
+            "GetOwnedGames",
+            1,
+            {"include_appinfo": True, "include_played_free_games": True},
+        )
+
+    def _get_player_achievements(self, app_id: int) -> Optional[Dict[str, Any]]:
+        return self._make_api_call(
+            "ISteamUserStats", "GetPlayerAchievements", 1, {"appid": app_id}
+        )
+
+    def _get_user_stats_for_game(self, app_id: int) -> Optional[Dict[str, Any]]:
+        return self._make_api_call(
+            "ISteamUserStats", "GetUserStatsForGame", 2, {"appid": app_id}
+        )
+
+    def _get_player_level(self) -> Optional[Dict[str, Any]]:
+        return self._make_api_call("IPlayerService", "GetSteamLevel", 1)
+
+    def _get_player_badges(self) -> Optional[Dict[str, Any]]:
+        return self._make_api_call("IPlayerService", "GetBadges", 1)
+
+    def _get_community_badge_progress(self) -> Optional[Dict[str, Any]]:
+        return self._make_api_call("IPlayerService", "GetCommunityBadgeProgress", 1)
 
     def generate(self) -> Union[Dict[str, Any], List[List[Any]]]:
-        """
-        This is a placeholder method to satisfy the pylint warning R0903.
-        """
-        return {}
+        """Fetches and generates the Steam profile as structured data."""
+        if not self.api_key or not self.steam_id:
+            print("ERROR: Steam API Key or Steam ID not set.")
+            return {}
+        print(f"Generating Steam profile for Steam ID: {self.steam_id}...")
+
+        aggregated_data: List[List[Any]] = []
+
+        # Profile Summary
+        aggregated_data.append(["--- Profile Summary ---"])
+        aggregated_data.append(["Metric", "Value"])
+        aggregated_data.append(
+            ["Generated On", datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+        )
+
+        player_summary = self._get_player_summaries()
+        if player_summary and player_summary.get("response", {}).get("players"):
+            player = player_summary["response"]["players"][0]
+            aggregated_data.append(["Username", player.get("personaname", "N/A")])
+        else:
+            aggregated_data.append(["Username", "Could not fetch."])
+
+        level_data = self._get_player_level()
+        if level_data and level_data.get("response"):
+            aggregated_data.append(
+                ["Steam Level", level_data["response"].get("player_level", "N/A")]
+            )
+
+        badges_data = self._get_player_badges()
+        if badges_data and badges_data.get("response"):
+            aggregated_data.append(
+                ["Total Badges", len(badges_data["response"].get("badges", []))]
+            )
+            aggregated_data.append(
+                ["Total XP", badges_data["response"].get("player_xp", "N/A")]
+            )
+
+        badge_progress = self._get_community_badge_progress()
+        if badge_progress and badge_progress.get("response", {}).get("quests"):
+            completed_quests = sum(
+                1 for q in badge_progress["response"]["quests"] if q.get("completed")
+            )
+            aggregated_data.append(
+                [
+                    "Community Quests Completed",
+                    f"{completed_quests}/{len(badge_progress['response']['quests'])}",
+                ]
+            )
+        aggregated_data.append([])
+
+        # Game Library Analysis
+        aggregated_data.append(["--- Game Library ---"])
+        aggregated_data.append(
+            [
+                "Game Name",
+                "Playtime (hours)",
+                "Achievements (Achieved/Total)",
+                "Custom Stats",
+            ]
+        )
+        owned_games = self._get_owned_games()
+        if owned_games and owned_games.get("response", {}).get("games"):
+            games = sorted(
+                owned_games["response"]["games"],
+                key=lambda x: x.get("playtime_forever", 0),
+                reverse=True,
+            )
+
+            for game in games:
+                appid = game.get("appid")
+                playtime_hours = game.get("playtime_forever", 0) / 60
+
+                achievements_summary = "N/A"
+                achievements = self._get_player_achievements(appid)
+                if (
+                    achievements
+                    and achievements.get("playerstats", {}).get("success")
+                    and "achievements" in achievements["playerstats"]
+                ):
+                    achieved = [
+                        a
+                        for a in achievements["playerstats"]["achievements"]
+                        if a.get("achieved")
+                    ]
+                    total = len(achievements["playerstats"]["achievements"])
+                    achievements_summary = f"{len(achieved)} / {total}"
+
+                user_stats_summary = "N/A"
+                user_stats = self._get_user_stats_for_game(appid)
+                if (
+                    user_stats
+                    and user_stats.get("playerstats", {}).get("success")
+                    and "stats" in user_stats["playerstats"]
+                ):
+                    user_stats_summary = "; ".join(
+                        [
+                            f"{stat.get('name', 'N/A')}: {stat.get('value', 'N/A')}"
+                            for stat in user_stats["playerstats"]["stats"]
+                        ]
+                    )
+
+                aggregated_data.append(
+                    [
+                        game.get("name", "Unknown Game"),
+                        f"{playtime_hours:.2f}",
+                        achievements_summary,
+                        user_stats_summary,
+                    ]
+                )
+        else:
+            aggregated_data.append(
+                ["Could not retrieve game library. Profile may be private.", "", "", ""]
+            )
+
+        print(f"Successfully generated Steam profile for Steam ID: {self.steam_id}")
+        return aggregated_data
 
 
 class ChessComGenerator:
